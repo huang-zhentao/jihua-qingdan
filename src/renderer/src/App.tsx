@@ -365,6 +365,7 @@ export function App() {
               <MonthGrid
                 weeks={weeks}
                 weekStart={data.settings.weekStart}
+                compact={Boolean(data.settings.compactMode)}
                 selectedKey={selectedKey}
                 todayKey={todayKey}
                 tasksByDate={tasksByDate}

@@ -34,5 +34,6 @@ export const DEFAULT_SETTINGS: Settings = {
   view: 'month',
   launchAtLogin: false,
   theme: 'light',
+  compactMode: false,
   syncIntervalHours: 24
 }

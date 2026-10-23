@@ -47,6 +47,8 @@ export interface Settings {
   /** 开机自启 */
   launchAtLogin: boolean
   theme: 'light' | 'dark' | 'system'
+  /** 月视图紧凑模式：格子内显示更多任务 */
+  compactMode: boolean
   /** 自动同步间隔（小时），0 表示关闭自动同步 */
   syncIntervalHours: number
 }

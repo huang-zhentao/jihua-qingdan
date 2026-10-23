@@ -501,6 +501,69 @@ button {
   color: #9aa0a8;
 }
 
+/* ---------- 紧凑模式 ---------- */
+
+.calendar.is-compact .cell {
+  padding: 5px 7px 0;
+}
+
+.calendar.is-compact .cell-head {
+  gap: 4px;
+  height: 20px;
+}
+
+.calendar.is-compact .cell-date {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.calendar.is-compact .is-today .cell-date {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+}
+
+.calendar.is-compact .cell-lunar {
+  font-size: 10px;
+}
+
+.calendar.is-compact .cell-badge {
+  width: 13px;
+  height: 13px;
+  font-size: 9px;
+  line-height: 13px;
+}
+
+.calendar.is-compact .cell-body {
+  gap: 2px;
+  margin-top: 1px;
+  padding: 1px 3px 3px;
+}
+
+.calendar.is-compact .chip {
+  height: 16px;
+  gap: 4px;
+  padding: 0 3px 0 5px;
+  font-size: 11px;
+  border-radius: 4px;
+}
+
+.calendar.is-compact .chip-time {
+  font-size: 9.5px;
+}
+
+.calendar.is-compact .chip-check {
+  flex-basis: 12px;
+  width: 12px;
+  height: 12px;
+}
+
+.calendar.is-compact .cell-more {
+  padding-left: 5px;
+  font-size: 10px;
+  line-height: 13px;
+}
+
 /* ---------- 悬浮新建按钮 ---------- */
 
 .fab-add {

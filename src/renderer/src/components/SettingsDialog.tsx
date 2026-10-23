@@ -165,6 +165,19 @@ export function SettingsDialog({ open, data, onClose, onSynced, onReplace, onTog
         </label>
 
         <label className="toggle-row">
+          <span className="toggle-label">紧凑模式</span>
+          <input
+            type="checkbox"
+            className="toggle-input"
+            checked={data.settings.compactMode}
+            onChange={(e) => onToggle({ compactMode: e.target.checked })}
+          />
+          <span className="toggle-track">
+            <span className="toggle-thumb" />
+          </span>
+        </label>
+
+        <label className="toggle-row">
           <span className="toggle-label">主题</span>
           <div className="seg">
             {(['light', 'dark', 'system'] as const).map((theme) => (

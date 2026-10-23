@@ -1,13 +1,29 @@
 import { getISOWeek } from 'date-fns'
 import { Check } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { isWeekend, weekdayLabels, type CalendarDay, type WeekStart } from '../domain/calendar'
 import { getHolidayMark } from '../domain/holidays'
 import { getDayLabel } from '../domain/lunar'
 import type { Project, Task } from '../domain/types'
 import { cx } from '../utils'
 
-const MAX_CHIPS = 4
+/** 任务条尺寸（与 styles.css 保持一致），用来算一格能塞下几条 */
+const METRICS = {
+  normal: { chip: 22, gap: 3, more: 16, overhead: 40 },
+  compact: { chip: 16, gap: 2, more: 13, overhead: 30 }
+}
+
+/** 按格子实际高度算「显示几条 + 溢出几条」，保证 +N 项不截断 */
+function fitChips(rowHeight: number, compact: boolean, count: number): { visible: number; rest: number } {
+  const m = compact ? METRICS.compact : METRICS.normal
+  const row = rowHeight > 0 ? rowHeight : 150
+  const avail = Math.max(0, row - m.overhead)
+  const maxNoMore = Math.max(1, Math.floor((avail + m.gap) / (m.chip + m.gap)))
+  if (count <= maxNoMore) return { visible: count, rest: 0 }
+  const maxWithMore = Math.max(0, Math.floor((avail - m.more - m.gap) / (m.chip + m.gap)))
+  const visible = Math.min(count, maxWithMore)
+  return { visible, rest: count - visible }
+}
 
 function TaskChip({
   task,
@@ -53,6 +69,8 @@ function DayCell({
   projectColor,
   selected,
   today,
+  rowHeight,
+  compact,
   onSelect,
   onEditTask,
   onToggleTask,
@@ -64,6 +82,8 @@ function DayCell({
   projectColor: (id: string) => string
   selected: boolean
   today: boolean
+  rowHeight: number
+  compact: boolean
   onSelect: (key: string) => void
   onEditTask: (task: Task) => void
   onToggleTask: (id: string) => void
@@ -72,10 +92,8 @@ function DayCell({
 }) {
   const label = getDayLabel(day.date)
   const holiday = getHolidayMark(day.date)
-  // 有溢出时少放一条，保证「+N 项」始终完整显示
-  const limit = tasks.length > MAX_CHIPS ? MAX_CHIPS - 1 : MAX_CHIPS
-  const visible = tasks.slice(0, limit)
-  const rest = tasks.length - visible.length
+  const { visible: visibleCount, rest } = fitChips(rowHeight, compact, tasks.length)
+  const visible = tasks.slice(0, visibleCount)
 
   return (
     <div
@@ -143,6 +161,7 @@ function DayCell({
 interface GridProps {
   weeks: CalendarDay[][]
   weekStart: WeekStart
+  compact: boolean
   selectedKey: string
   todayKey: string
   tasksByDate: Record<string, Task[]>
@@ -157,6 +176,7 @@ interface GridProps {
 export function MonthGrid({
   weeks,
   weekStart,
+  compact,
   selectedKey,
   todayKey,
   tasksByDate,
@@ -168,11 +188,24 @@ export function MonthGrid({
   onShowMore
 }: GridProps) {
   const labels = weekdayLabels(weekStart)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const [rowHeight, setRowHeight] = useState(0)
+
+  // 行高随窗口/周数变化：实时量出来，紧凑模式才能「一屏塞满」
+  useLayoutEffect(() => {
+    const el = gridRef.current
+    if (!el) return
+    const measure = (): void => setRowHeight(el.clientHeight / weeks.length)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [weeks.length])
   const colorOf = (projectId: string): string =>
     projects.find((p) => p.id === projectId)?.color ?? '#9AA4B2'
 
   return (
-    <div className="calendar">
+    <div className={cx('calendar', compact && 'is-compact')}>
       <div className="weekheader">
         {labels.map((label, index) => (
           <div key={label} className={cx('weekheader-cell', isWeekend((weekStart + index) % 7) && 'is-weekend')}>
@@ -190,7 +223,12 @@ export function MonthGrid({
           ))}
         </div>
 
-        <div className="grid" role="grid" style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}>
+        <div
+          ref={gridRef}
+          className="grid"
+          role="grid"
+          style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}
+        >
           {weeks.flat().map((day) => (
             <DayCell
               key={day.key}
@@ -199,6 +237,8 @@ export function MonthGrid({
               projectColor={colorOf}
               selected={day.key === selectedKey}
               today={day.key === todayKey}
+              rowHeight={rowHeight}
+              compact={compact}
               onSelect={onSelect}
               onEditTask={onEditTask}
               onToggleTask={onToggleTask}
