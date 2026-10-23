@@ -16,6 +16,9 @@ type Phase = 'idle' | 'testing' | 'saving' | 'syncing'
 
 const DEFAULT_URL = 'https://dav.jianguoyun.com/dav/'
 
+// 平台文案差异：macOS 叫「菜单栏/登录时启动」，Windows 叫「托盘/开机自启」
+const isMac = window.api?.platform === 'darwin'
+
 export function SettingsDialog({ open, data, onClose, onSynced, onReplace, onToggle }: Props) {
   const [url, setUrl] = useState(DEFAULT_URL)
   const [username, setUsername] = useState('')
@@ -149,7 +152,7 @@ export function SettingsDialog({ open, data, onClose, onSynced, onReplace, onTog
         </div>
 
         <label className="toggle-row">
-          <span className="toggle-label">开机自启</span>
+          <span className="toggle-label">{isMac ? '登录时启动' : '开机自启'}</span>
           <input
             type="checkbox"
             className="toggle-input"
@@ -221,8 +224,9 @@ export function SettingsDialog({ open, data, onClose, onSynced, onReplace, onTog
         <p className="settings-hint">
           数据目录：{dataPath || '读取中…'}
           <br />
-          点窗口的 × 不会退出，会收进系统托盘；右键托盘图标可以直接把今天未完成的任务勾掉，
-          退出请用托盘菜单里的「退出计划清单」。
+          {isMac
+            ? '点窗口左上角的红色按钮不会退出，会收进菜单栏；点菜单栏图标可以直接把今天未完成的任务勾掉，退出请用 ⌘Q 或菜单栏菜单里的「退出计划清单」。'
+            : '点窗口的 × 不会退出，会收进系统托盘；右键托盘图标可以直接把今天未完成的任务勾掉，退出请用托盘菜单里的「退出计划清单」。'}
         </p>
       </div>
 

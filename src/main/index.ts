@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, shell, Tray } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Notification, shell, Tray } from 'electron'
 import { spawn } from 'node:child_process'
 import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
@@ -23,13 +23,14 @@ import {
 import { loadWindowState, saveWindowState } from './windowState'
 
 const isMac = process.platform === 'darwin'
+const isWin = process.platform === 'win32'
 const shotMode = Boolean(process.env.SHOT)
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let isQuitting = false
 
-// Windows 上必须设置 AppUserModelId，否则系统通知不会显示应用名
-app.setAppUserModelId('com.tao.jihuaqingdan')
+// Windows 上必须设置 AppUserModelId，否则系统通知不会显示应用名（macOS 不需要）
+if (isWin) app.setAppUserModelId('com.tao.jihuaqingdan')
 
 const EXE_DIR = dirname(process.execPath)
 
@@ -64,7 +65,12 @@ function pickDataDir(): string {
   const roaming = join(app.getPath('appData'), 'jihua-qingdan')
   const profile = process.env.USERPROFILE ? join(process.env.USERPROFILE, '计划清单数据') : null
   const localAppData = process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'jihua-qingdan') : null
-  const portable = app.isPackaged ? join(EXE_DIR, 'data') : join(process.cwd(), '.data')
+  // macOS 打包后 process.execPath 在 .app 内部（只读，写入还会破坏签名），不能当数据目录
+  const portable = app.isPackaged
+    ? isMac
+      ? null
+      : join(EXE_DIR, 'data')
+    : join(process.cwd(), '.data')
 
   const list = [roaming, profile, localAppData, portable, join(tmpdir(), 'jihua-qingdan')].filter(
     (d): d is string => Boolean(d)
@@ -147,30 +153,41 @@ if (shotMode) {
 function createWindow(): void {
   log('createWindow start')
   const saved = loadWindowState()
+  const options: Electron.BrowserWindowConstructorOptions = {
+    x: saved.x,
+    y: saved.y,
+    width: saved.width,
+    height: saved.height,
+    minWidth: 1040,
+    minHeight: 720,
+    show: false,
+    icon: app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(process.cwd(), 'build', 'icon.png'),
+    backgroundColor: '#ffffff',
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  }
+  if (isMac) {
+    // macOS 用系统红绿灯；此时不能再设 frame:false，否则关不掉也最小化不了
+    options.titleBarStyle = 'hiddenInset'
+    options.trafficLightPosition = { x: 14, y: 11 }
+  } else {
+    // Windows 保持自绘无边框标题栏
+    options.frame = false
+    options.titleBarStyle = 'hidden'
+  }
   try {
-    mainWindow = new BrowserWindow({
-      x: saved.x,
-      y: saved.y,
-      width: saved.width,
-      height: saved.height,
-      minWidth: 1040,
-      minHeight: 720,
-      show: false,
-      frame: false,
-      icon: app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(process.cwd(), 'build', 'icon.png'),
-      titleBarStyle: isMac ? 'hiddenInset' : 'hidden',
-      trafficLightPosition: { x: 14, y: 11 },
-      backgroundColor: '#ffffff',
-      webPreferences: {
-        preload: join(__dirname, '../preload/index.js'),
-        sandbox: false,
-        contextIsolation: true,
-        nodeIntegration: false
-      }
-    })
+    mainWindow = new BrowserWindow(options)
   } catch (err) {
     log('BrowserWindow failed', err)
     throw err
+  }
+  if (isMac) {
+    // hiddenInset 下红绿灯默认就显示；这里显式打开，避免不同 macOS 版本表现不一致
+    mainWindow.setWindowButtonVisibility(true)
   }
   if (saved.maximized) mainWindow.maximize()
   log('createWindow ok')
@@ -267,11 +284,19 @@ function refreshTrayMenu(): void {
 function showWindow(): void {
   if (!mainWindow) return
   if (mainWindow.isMinimized()) mainWindow.restore()
+  // macOS：Cmd+H 把 app 隐藏后，只 show 窗口不会回到前台，需要先 app.show()
+  if (isMac) app.show()
   mainWindow.show()
   mainWindow.focus()
 }
 
 function trayIconPath(): string {
+  if (isMac) {
+    // macOS 菜单栏图标用模板图（黑色 + alpha），系统会自动适配浅色/深色菜单栏
+    return app.isPackaged
+      ? join(process.resourcesPath, 'trayTemplate.png')
+      : join(process.cwd(), 'build', 'trayTemplate.png')
+  }
   return app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(process.cwd(), 'build', 'icon.png')
 }
 
@@ -279,21 +304,102 @@ function createTray(): void {
   if (tray || shotMode) return
   try {
     const image = nativeImage.createFromPath(trayIconPath())
-    tray = new Tray(image.isEmpty() ? nativeImage.createEmpty() : image.resize({ width: 16, height: 16 }))
+    if (isMac) {
+      image.setTemplateImage(true)
+      tray = new Tray(image.isEmpty() ? nativeImage.createEmpty() : image)
+    } else {
+      tray = new Tray(image.isEmpty() ? nativeImage.createEmpty() : image.resize({ width: 16, height: 16 }))
+    }
     tray.setToolTip('计划清单')
     tray.setContextMenu(buildTrayMenu())
-    tray.on('click', () => {
-      if (!mainWindow) return
-      if (mainWindow.isVisible() && mainWindow.isFocused()) mainWindow.hide()
-      else showWindow()
-    })
-    log('tray created')
+    if (!isMac) {
+      // Windows：左键点击托盘图标切换窗口显示；macOS 上左键会直接弹出菜单（系统行为）
+      tray.on('click', () => {
+        if (!mainWindow) return
+        if (mainWindow.isVisible() && mainWindow.isFocused()) mainWindow.hide()
+        else showWindow()
+      })
+    }
+    log('tray created', isMac ? 'template' : '16px', image.getSize())
   } catch (err) {
     log('tray failed', err)
   }
 }
 
-async function captureAndExit(win: BrowserWindow): Promise<void> {  try {
+/**
+ * macOS 需要保留一个最小应用菜单：⌘Q / ⌘W / ⌘C / ⌘V 这些标准快捷键都由它提供。
+ * Windows 上不设置菜单，保持原来的自绘标题栏，行为完全不变。
+ */
+function createMacMenu(): void {
+  if (!isMac) return
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: '计划清单',
+      submenu: [
+        { role: 'about', label: '关于计划清单' },
+        { label: '设置…', accelerator: 'Cmd+,', click: () => mainWindow?.webContents.send('app:open-settings') },
+        { type: 'separator' },
+        { role: 'hide', label: '隐藏计划清单' },
+        { role: 'hideOthers', label: '隐藏其他' },
+        { role: 'unhide', label: '显示全部' },
+        { type: 'separator' },
+        { role: 'quit', label: '退出计划清单' }
+      ]
+    },
+    {
+      label: '编辑',
+      submenu: [
+        { role: 'undo', label: '撤销' },
+        { role: 'redo', label: '重做' },
+        { type: 'separator' },
+        { role: 'cut', label: '剪切' },
+        { role: 'copy', label: '复制' },
+        { role: 'paste', label: '粘贴' },
+        { role: 'selectAll', label: '全选' }
+      ]
+    },
+    {
+      label: '窗口',
+      submenu: [
+        { role: 'minimize', label: '最小化' },
+        { role: 'zoom', label: '缩放' },
+        { type: 'separator' },
+        { role: 'close', label: '关闭窗口' },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: '进入全屏幕' }
+      ]
+    }
+  ]
+  if (!app.isPackaged) {
+    template.push({
+      label: '视图',
+      submenu: [
+        { role: 'reload', label: '重新加载' },
+        { role: 'toggleDevTools', label: '开发者工具' },
+        { type: 'separator' },
+        { role: 'resetZoom', label: '实际大小' },
+        { role: 'zoomIn', label: '放大' },
+        { role: 'zoomOut', label: '缩小' }
+      ]
+    })
+  }
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+  log('mac menu created', template.map((m) => m.label ?? m.role).join(','))
+}
+
+/** 开发态（未打包）在 Dock 上显示自己的图标，而不是 Electron 默认图标 */
+function applyDevDockIcon(): void {
+  if (!isMac || app.isPackaged) return
+  const iconPath = join(process.cwd(), 'build', 'icon.png')
+  try {
+    if (existsSync(iconPath)) app.dock?.setIcon(iconPath)
+  } catch {
+    // Dock 图标设置失败不影响启动
+  }
+}
+
+async function captureAndExit(win: BrowserWindow): Promise<void> {
+  try {
     await new Promise((r) => setTimeout(r, 1500))
     const image = await win.webContents.capturePage()
     const out = process.env.SHOT_OUT ?? 'shot.png'
@@ -319,11 +425,8 @@ ipcMain.on('notify:sync', (_e, list: ReminderItem[]) => {
     list ?? [],
     (taskId, date) => {
       log('notification clicked', taskId, date)
-      if (!mainWindow) return
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.show()
-      mainWindow.focus()
-      mainWindow.webContents.send('app:open-task', taskId, date)
+      showWindow()
+      mainWindow?.webContents.send('app:open-task', taskId, date)
     },
     (item) => log('reminder fired', item.title)
   )
@@ -394,9 +497,10 @@ ipcMain.handle('app:openDataDir', async () => {
   }
   const err = await shell.openPath(dir)
   if (!err) return { ok: true }
-  // ShellExecute 偶发失败时会弹系统错误框；改用 explorer.exe 直接打开
+  // ShellExecute 偶发失败时会弹系统错误框；改用系统命令直接打开
   try {
-    spawn('explorer.exe', [dir], { detached: true, stdio: 'ignore' }).unref()
+    const opener = isMac ? 'open' : 'explorer.exe'
+    spawn(opener, [dir], { detached: true, stdio: 'ignore' }).unref()
     return { ok: true, viaExplorer: true }
   } catch (e) {
     return { ok: false, message: err || (e as Error).message }
@@ -405,9 +509,18 @@ ipcMain.handle('app:openDataDir', async () => {
 
 ipcMain.handle('app:setLoginItem', (_e, enabled: boolean) => {
   if (app.isPackaged) {
-    app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath, args: ['--no-sandbox'] })
+    if (isMac) {
+      // macOS 13+ 走 SMAppService；不接受 path/args
+      try {
+        app.setLoginItemSettings({ openAtLogin: enabled, type: 'mainAppService' })
+      } catch {
+        app.setLoginItemSettings({ openAtLogin: enabled })
+      }
+    } else {
+      app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath, args: ['--no-sandbox'] })
+    }
   }
-  log('login item', enabled)
+  log('login item', enabled, isMac ? app.getLoginItemSettings().status ?? '' : '')
   return enabled
 })
 ipcMain.handle('app:getLoginItem', () => (app.isPackaged ? app.getLoginItemSettings().openAtLogin : false))
@@ -500,6 +613,9 @@ if (!gotLock) {
     .whenReady()
     .then(() => {
       log('app ready')
+      log('notifications supported', Notification.isSupported())
+      applyDevDockIcon()
+      createMacMenu()
       createWindow()
       createTray()
       app.on('activate', () => {
