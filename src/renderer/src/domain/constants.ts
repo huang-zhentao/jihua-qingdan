@@ -34,3 +34,25 @@ export const TASK_COLORS = [
   '#D9B98C',
   '#6ED4A8'
 ]
+
+
+/** HSL → #rrggbb */
+function hslToHex(h: number, s: number, l: number): string {
+  const a = (s / 100) * Math.min(l / 100, 1 - l / 100)
+  const f = (n: number): string => {
+    const k = (n + h / 30) % 12
+    const color = l / 100 - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, '0')
+  }
+  return `#${f(0)}${f(8)}${f(4)}`
+}
+
+/** 随机任务色：限定饱和度和亮度，保证浅底深字在月视图里可读 */
+export function randomTaskColor(): string {
+  const hue = Math.floor(Math.random() * 360)
+  const saturation = 56 + Math.floor(Math.random() * 22) // 56–77
+  const lightness = 46 + Math.floor(Math.random() * 14) // 46–59
+  return hslToHex(hue, saturation, lightness)
+}

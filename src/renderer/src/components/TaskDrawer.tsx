@@ -1,6 +1,6 @@
-import { AlignLeft, Bell, Calendar, Check, ChevronRight, Circle, Flag, Palette, Tag } from 'lucide-react'
+import { AlignLeft, Bell, Calendar, Check, ChevronRight, Circle, Flag, Palette, Shuffle, Tag } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { PRIORITY_COLORS, PRIORITY_LABELS, REMIND_DAYS, TASK_COLORS, remindLabel } from '../domain/constants'
+import { PRIORITY_COLORS, PRIORITY_LABELS, REMIND_DAYS, TASK_COLORS, randomTaskColor, remindLabel } from '../domain/constants'
 import { remindAtFor, remindDaysOf } from '../domain/reminder'
 import type { Priority, Project, Task, TaskDraft } from '../domain/types'
 import { cx } from '../utils'
@@ -207,6 +207,32 @@ export function TaskDrawer({
                     onClick={() => setColor(c)}
                   />
                 ))}
+                {color && !TASK_COLORS.includes(color) ? (
+                  <button
+                    type="button"
+                    className="color-choice is-custom is-active"
+                    style={{ background: color }}
+                    title={`当前颜色 ${color}`}
+                    onClick={() => setColor(color)}
+                  />
+                ) : null}
+                <label className="color-choice is-picker" title="自定义颜色">
+                  <input
+                    type="color"
+                    value={color ?? '#F5B942'}
+                    aria-label="自定义颜色"
+                    onChange={(e) => setColor(e.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="color-choice is-random"
+                  title="随机颜色"
+                  aria-label="随机颜色"
+                  onClick={() => setColor(randomTaskColor())}
+                >
+                  <Shuffle size={10} strokeWidth={2.2} />
+                </button>
               </div>
             </div>
 
