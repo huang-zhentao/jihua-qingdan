@@ -27,3 +27,6 @@ mock-dav-store.json
 # macOS 图标预览（脚本生成的中间产物）
 build/icon-mac-preview.png
 build/icon.iconset/
+
+# macOS
+.DS_Store

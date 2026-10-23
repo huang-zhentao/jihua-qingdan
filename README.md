@@ -47,6 +47,7 @@ npm run test:mac    # macOS 功能自检（菜单/菜单栏图标/通知/快捷�
 第一次打开需要：右键 App →「打开」，或执行一次
 `xattr -dr com.apple.quarantine /Applications/计划清单.app`。
 换图标/重画图标后可执行 `python3 scripts/make-mac-icons.py` 重新生成 `build/icon.icns` 与菜单栏模板图。
+发布流程与要求（Windows + macOS 安装包需同时上传、说明文件用 UTF-8）见 [docs/发布清单.md](docs/发布清单.md)。
 
 ## 数据
 
