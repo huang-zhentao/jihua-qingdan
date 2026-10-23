@@ -11,7 +11,9 @@
     "preview": "electron-vite preview",
     "shot": "electron-vite build && node scripts/shot.mjs",
     "dist": "electron-vite build && electron-builder --win portable",
-    "dist:nsis": "electron-vite build && electron-builder --win nsis"
+    "dist:nsis": "electron-vite build && electron-builder --win nsis",
+    "dist:mac": "electron-vite build && electron-builder --mac dmg",
+    "test:mac": "electron-vite build && node scripts/test-mac.mjs"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
@@ -78,11 +80,26 @@
       "artifactName": "计划清单-${version}-setup.exe"
     },
     "mac": {
-      "icon": "build/icon.png",
+      "icon": "build/icon.icns",
       "category": "public.app-category.productivity",
+      "minimumSystemVersion": "12.0",
       "target": [
         "dmg"
+      ],
+      "artifactName": "计划清单-${version}-${arch}.dmg",
+      "extraResources": [
+        {
+          "from": "build/trayTemplate.png",
+          "to": "trayTemplate.png"
+        },
+        {
+          "from": "build/trayTemplate@2x.png",
+          "to": "trayTemplate@2x.png"
+        }
       ]
+    },
+    "dmg": {
+      "title": "计划清单 ${version}"
     }
   }
 }

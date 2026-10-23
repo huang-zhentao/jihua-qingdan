@@ -93,6 +93,11 @@ const api = {
       const handler = (_e: unknown, taskId: string, date: string): void => cb(taskId, date)
       ipcRenderer.on('app:open-task', handler)
       return () => ipcRenderer.removeListener('app:open-task', handler)
+    },
+    onOpenSettings: (cb: () => void): (() => void) => {
+      const handler = (): void => cb()
+      ipcRenderer.on('app:open-settings', handler)
+      return () => ipcRenderer.removeListener('app:open-settings', handler)
     }
   }
 }

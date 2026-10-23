@@ -19,6 +19,9 @@ import { expandTasks } from './domain/occurrence'
 import type { AppData, Task, TaskDraft } from './domain/types'
 import { useAppStore } from './store/useAppStore'
 
+// 快捷键提示按平台显示：macOS 用 ⌘，Windows 用 Ctrl
+const isMac = window.api?.platform === 'darwin'
+
 interface DrawerState {
   open: boolean
   task: Task | null
@@ -130,6 +133,11 @@ export function App() {
       setCursor({ year: parsed.getFullYear(), month: parsed.getMonth() })
       if (task) setDrawer({ open: true, task, date: task.date })
     })
+  }, [])
+
+  // macOS 菜单「设置…」(⌘,) 打开设置；Windows 没有这个菜单项，不会触发
+  useEffect(() => {
+    return window.api.app.onOpenSettings(() => setSettingsOpen(true))
   }, [])
 
   // 把今天未完成的任务同步到托盘菜单
@@ -339,7 +347,7 @@ export function App() {
                       type="button"
                       className="tb-btn"
                       aria-label="搜索日程"
-                      title="搜索日程 (Ctrl+K)"
+                      title={`搜索日程 (${isMac ? '⌘K' : 'Ctrl+K'})`}
                       onClick={() => setSearchOpen(true)}
                     >
                       <Search size={15} strokeWidth={1.9} />
