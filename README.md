@@ -1,78 +1,37 @@
 # 计划清单
 
-**下载**：https://github.com/huang-zhentao/jihua-qingdan/releases/latest （Windows 安装包 / macOS dmg）
+**下载**：[Windows 安装包 / macOS dmg](https://github.com/huang-zhentao/jihua-qingdan/releases/latest)
 
-一个 Windows / macOS 桌面日历 + 待办应用，用 Electron + React + TypeScript 构建。
+一款类似「指尖时光」的桌面计划清单软件，用来管理日程和任务：在月历上安排日程、记录待办，到点提醒；
+内置 AI 助手帮你分析近期的任务安排，并支持坚果云同步，多台电脑之间的数据自动合并。
 
 ## 功能
 
-- **月历**：农历、节气、节日、休班标记；年月快速跳转；「今」一键回到今天
-- **任务**：右侧抽屉增删改；日期、项目分类、优先级、背景色；备注支持简单 Markdown
-- **提醒**：按天提前 1–5 天，到点弹系统通知，点通知直接打开对应日程
-- **待办视图**：左侧迷你日历（有任务的日期带灰点）、当天日程、按项目筛选
-- **常驻菜单栏/托盘**：关窗口不退出；Windows 右键托盘、macOS 点菜单栏图标，可直接勾掉今天未完成的任务
-- **搜索**：`Ctrl+K`（macOS 为 `⌘K`）全局搜索任务
-- **同步**：WebDAV（坚果云 / 群晖 / Nextcloud 等），自动同步间隔可选
-- **AI 助手**：接入 OpenAI 兼容接口（默认 DeepSeek），对话式分析近期任务
+- **月历日程**：农历、节气、节日、休班标记；快速跳转年月，一键回到今天
+- **任务管理**：日期、项目分类、优先级、背景色，备注支持简单 Markdown
+- **提醒**：提前 1–5 天提醒，到点弹系统通知，点通知直接打开对应日程
+- **待办视图**：迷你日历 + 当天日程，按项目筛选
+- **常驻托盘 / 菜单栏**：关闭窗口不退出，随时查看、勾掉今天未完成的任务
+- **全局搜索**：`Ctrl+K`（macOS `⌘K`）快速找到任务
+- **AI 分析**：接入 DeepSeek 等 OpenAI 兼容接口，对话式分析近期任务，帮你梳理安排
+- **坚果云同步**：通过 WebDAV 同步到坚果云（也兼容群晖、Nextcloud 等），多设备自动合并
 - **深色模式**：浅色 / 深色 / 跟随系统
 
-## 开发
+## 上手
 
-```bash
-npm install
-npm run dev
-```
+1. 下载安装包：Windows 运行安装程序；macOS 打开 dmg，把「计划清单」拖进「应用程序」
+2. Windows 若提示未知发布者，点「更多信息」→「仍要运行」；macOS 未签名，首次启动请右键 App →「打开」
+3. **坚果云同步**：设置 → 坚果云 WebDAV 同步，填服务器地址、账号和「应用密码」
+   （应用密码在坚果云网页端「安全选项」里生成，不是登录密码）
+4. **AI 分析**：设置 → AI 助手，选 DeepSeek（或其它兼容接口），填入 API Key
 
-- Windows 也可以双击 `启动开发模式.cmd`
-- macOS 也可以双击 `启动开发模式.command`（首次可能需要在「系统设置 → 隐私与安全性」里允许）
+## 数据与隐私
 
-> 依赖装不上时注意：Electron 二进制默认从 GitHub 下载，国内网络可先 `proxy-on`，
-> 或设置 `ELECTRON_GET_USE_PROXY=1` / `ELECTRON_MIRROR` 镜像。
-
-## 打包
-
-Windows：
-
-```bash
-npm run dist        # 生成便携版（计划清单-x.y.z-portable.exe）
-npm run dist:nsis   # 生成安装包（计划清单-x.y.z-setup.exe）
-```
-
-macOS（必须在 macOS 上执行）：
-
-```bash
-npm run dist:mac    # 生成 .dmg，架构与当前机器一致（Apple Silicon 出 arm64）
-npm run test:mac    # macOS 功能自检（菜单/菜单栏图标/通知/快捷键/关闭到菜单栏…）
-```
-
-产物在 `dist/计划清单-x.y.z-<arch>.dmg`。未配置签名证书时打包会跳过签名，
-第一次打开需要：右键 App →「打开」，或执行一次
-`xattr -dr com.apple.quarantine /Applications/计划清单.app`。
-换图标/重画图标后可执行 `python3 scripts/make-mac-icons.py` 重新生成 `build/icon.icns` 与菜单栏模板图。
-发布流程与要求（Windows + macOS 安装包需同时上传、说明文件用 UTF-8）见 [docs/发布清单.md](docs/发布清单.md)。
-
-## 数据
-
-数据默认保存在用户目录，不在安装目录里，升级或重装不会覆盖：
-
-- Windows：`%APPDATA%\jihua-qingdan\data.json`
-- macOS：`~/Library/Application Support/jihua-qingdan/data.json`
-
-可以在 设置 → 数据与备份 里查看路径、导入 `data.json`。
-
-## 目录结构
-
-```
-src/main        Electron 主进程（窗口、托盘、提醒、同步、AI）
-src/preload     预加载脚本（contextBridge 白名单）
-src/renderer    React 界面
-build           打包脚本、图标、安装器
-scripts         端到端测试与本地 WebDAV / AI 模拟服务
-docs            设计文档
-```
+- 日程、任务数据保存在本机；同步只走你自己配置的坚果云账号
+- 坚果云应用密码和 AI API Key 只存在本机（系统钥匙串加密），不会出现在安装包或仓库里
+- 只有在你主动使用 AI 分析时，才会把相关任务内容发送给你配置的 AI 接口
 
 ## 说明
 
-- 部分 Windows 环境里 Chromium 沙箱初始化会失败，便携版根目录的启动器会自动补上 `--no-sandbox` 参数。
-- macOS 版关闭窗口只是收进菜单栏，退出请用 `⌘Q` 或菜单栏菜单里的「退出计划清单」。
-- macOS 适配的详细改动与验证记录见 [docs/macOS-适配说明.md](docs/macOS-适配说明.md)。
+- 关闭窗口只是收进托盘 / 菜单栏，不会退出；退出请用托盘菜单里的「退出计划清单」或 `⌘Q`
+- 开发、打包、发布相关文档见 [docs/](docs/)
