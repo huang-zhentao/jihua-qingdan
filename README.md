@@ -1,5 +1,7 @@
 # 计划清单
 
+**下载**：https://github.com/huang-zhentao/jihua-qingdan/releases/latest （Windows 安装包 / macOS dmg）
+
 一个 Windows / macOS 桌面日历 + 待办应用，用 Electron + React + TypeScript 构建。
 
 ## 功能
