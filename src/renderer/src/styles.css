@@ -267,7 +267,31 @@ button {
   grid-template-columns: repeat(7, minmax(0, 1fr));
   align-items: center;
   height: 40px;
-  padding: 0 12px;
+  padding: 0 12px 0 42px;
+}
+
+/* 左侧周数栏（ISO 周） */
+.cal-wrap {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.weeknums {
+  display: flex;
+  flex: 0 0 26px;
+  flex-direction: column;
+  margin: 0 0 10px 12px;
+}
+
+.weeknum {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #c4c9d0;
+  font-variant-numeric: tabular-nums;
 }
 
 .weekheader-cell {
@@ -284,7 +308,7 @@ button {
   display: grid;
   flex: 1;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  margin: 0 12px 10px;
+  margin: 0 12px 10px 4px;
   border-top: 1px solid var(--line);
   min-height: 0;
 }
@@ -345,6 +369,14 @@ button {
 
 .cell-lunar.is-special {
   color: #8f959e;
+}
+
+.cell-lunar.is-festival {
+  color: #d15a3a;
+}
+
+.cell-lunar.is-jieqi {
+  color: #2f9e44;
 }
 
 .is-out .cell-date {
@@ -409,6 +441,15 @@ button {
   background: color-mix(in srgb, var(--chip) 24%, #fff);
 }
 
+.chip-time {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--chip) 88%, #343a42);
+  opacity: 0.92;
+}
+
 .chip-text {
   flex: 1;
   overflow: hidden;
@@ -458,6 +499,31 @@ button {
   font-size: 11px;
   line-height: 16px;
   color: #9aa0a8;
+}
+
+/* ---------- 悬浮新建按钮 ---------- */
+
+.fab-add {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9425 0%, #ff7a1a 100%);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(255, 122, 26, 0.38);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.fab-add:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(255, 122, 26, 0.46);
 }
 
 /* ---------- 年月选择 ---------- */
@@ -2038,6 +2104,22 @@ html.theme-dark .is-out .cell-lunar {
 
 html.theme-dark .is-selected .cell-body {
   background: #2a2118;
+}
+
+html.theme-dark .weeknum {
+  color: #4b515a;
+}
+
+html.theme-dark .cell-lunar.is-festival {
+  color: #e0785c;
+}
+
+html.theme-dark .cell-lunar.is-jieqi {
+  color: #5cc27a;
+}
+
+html.theme-dark .chip-time {
+  color: color-mix(in srgb, var(--chip) 70%, #dfe3e8);
 }
 
 html.theme-dark .cell-more {

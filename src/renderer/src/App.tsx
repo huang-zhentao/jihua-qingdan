@@ -1,5 +1,5 @@
 import { addDays, addMonths, format, parseISO } from 'date-fns'
-import { Search } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DayPeek } from './components/DayPeek'
 import { DayView } from './components/DayView'
@@ -381,6 +381,16 @@ export function App() {
                   setPeek({ key, anchor })
                 }}
               />
+
+              <button
+                type="button"
+                className="fab-add"
+                aria-label="新建日程"
+                title="新建日程"
+                onClick={() => openCreate(selectedKey)}
+              >
+                <Plus size={22} strokeWidth={2.2} />
+              </button>
             </>
           ) : view === 'day' ? (
             <DayView

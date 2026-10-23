@@ -1,3 +1,4 @@
+import { getISOWeek } from 'date-fns'
 import { Check } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { isWeekend, weekdayLabels, type CalendarDay, type WeekStart } from '../domain/calendar'
@@ -29,6 +30,7 @@ function TaskChip({
         onEdit()
       }}
     >
+      {task.time ? <span className="chip-time">{task.time}</span> : null}
       <span className="chip-text">{task.title}</span>
       <button
         type="button"
@@ -70,7 +72,9 @@ function DayCell({
 }) {
   const label = getDayLabel(day.date)
   const holiday = getHolidayMark(day.date)
-  const visible = tasks.slice(0, MAX_CHIPS)
+  // 有溢出时少放一条，保证「+N 项」始终完整显示
+  const limit = tasks.length > MAX_CHIPS ? MAX_CHIPS - 1 : MAX_CHIPS
+  const visible = tasks.slice(0, limit)
   const rest = tasks.length - visible.length
 
   return (
@@ -90,7 +94,16 @@ function DayCell({
     >
       <div className="cell-head">
         <span className="cell-date">{day.date.getDate()}</span>
-        <span className={cx('cell-lunar', label.kind !== 'lunar-day' && 'is-special')}>{label.text}</span>
+        <span
+          className={cx(
+            'cell-lunar',
+            label.kind !== 'lunar-day' && 'is-special',
+            label.kind === 'festival' && 'is-festival',
+            label.kind === 'jieqi' && 'is-jieqi'
+          )}
+        >
+          {label.text}
+        </span>
         {holiday ? (
           <span className={cx('cell-badge', holiday.type)} title={holiday.name}>
             {holiday.type === 'rest' ? '休' : '班'}
@@ -119,7 +132,7 @@ function DayCell({
               onShowMore(day.key, { left: rect.left, top: rect.bottom + 6 })
             }}
           >
-            +{rest}
+            +{rest} 项
           </button>
         ) : null}
       </div>
@@ -168,22 +181,32 @@ export function MonthGrid({
         ))}
       </div>
 
-      <div className="grid" role="grid" style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}>
-        {weeks.flat().map((day) => (
-          <DayCell
-            key={day.key}
-            day={day}
-            tasks={tasksByDate[day.key] ?? []}
-            projectColor={colorOf}
-            selected={day.key === selectedKey}
-            today={day.key === todayKey}
-            onSelect={onSelect}
-            onEditTask={onEditTask}
-            onToggleTask={onToggleTask}
-            onNewTask={onNewTask}
-            onShowMore={onShowMore}
-          />
-        ))}
+      <div className="cal-wrap">
+        <div className="weeknums" aria-hidden="true">
+          {weeks.map((week) => (
+            <div key={week[0].key} className="weeknum">
+              {getISOWeek(week[weekStart === 1 ? 0 : 1].date)}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid" role="grid" style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}>
+          {weeks.flat().map((day) => (
+            <DayCell
+              key={day.key}
+              day={day}
+              tasks={tasksByDate[day.key] ?? []}
+              projectColor={colorOf}
+              selected={day.key === selectedKey}
+              today={day.key === todayKey}
+              onSelect={onSelect}
+              onEditTask={onEditTask}
+              onToggleTask={onToggleTask}
+              onNewTask={onNewTask}
+              onShowMore={onShowMore}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )
