@@ -1,0 +1,88 @@
+{
+  "name": "jihua-qingdan",
+  "version": "0.12.8",
+  "private": true,
+  "description": "跨平台桌面日历 · 月视图 + 日程待办",
+  "author": "tao",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev --noSandbox",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "shot": "electron-vite build && node scripts/shot.mjs",
+    "dist": "electron-vite build && electron-builder --win portable",
+    "dist:nsis": "electron-vite build && electron-builder --win nsis"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.469.0",
+    "lunar-typescript": "^1.7.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.16"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
+  },
+  "build": {
+    "appId": "com.tao.jihuaqingdan",
+    "productName": "计划清单",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "electronDist": "node_modules/electron/dist",
+    "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "计划清单-${version}-portable.exe"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": false,
+      "shortcutName": "计划清单",
+      "include": "build/installer.nsh",
+      "artifactName": "计划清单-${version}-setup.exe"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg"
+      ]
+    }
+  }
+}

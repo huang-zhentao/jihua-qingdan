@@ -1,0 +1,26 @@
+# 依赖与构建产物
+node_modules/
+out/
+dist/
+build/payload/
+build/payload.zip
+build/*.exe
+.data/
+.nsis-tmp/
+.npm-cache/
+.electron-cache/
+.electron-builder-cache/
+
+# 运行时数据与日志
+*.log
+p.out
+p.err
+*.local
+
+# 截图与参考图（含个人数据，不入库）
+shots/
+docs/assets/
+
+# 测试数据
+**/testdata/
+mock-dav-store.json
