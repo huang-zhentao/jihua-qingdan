@@ -1,8 +1,9 @@
 import { ArrowUp, Sparkles, Square, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { format, subDays } from 'date-fns'
+import { format, parseISO, subDays } from 'date-fns'
 import type { Project, Task } from '../domain/types'
 import { cx } from '../utils'
+import { useTodayKey } from '../hooks/useTodayKey'
 
 type Range = '7d' | '30d' | 'month'
 
@@ -160,7 +161,8 @@ export function AiView({ tasks, projects, onOpenSettings }: Props) {
     if (box) box.scrollTop = box.scrollHeight
   }, [messages, running])
 
-  const today = useMemo(() => new Date(), [])
+  const [todayKey] = useTodayKey()
+  const today = useMemo(() => parseISO(todayKey), [todayKey])
   const fromKey = format(startOf(range, today), 'yyyy-MM-dd')
   const toKey = format(today, 'yyyy-MM-dd')
 

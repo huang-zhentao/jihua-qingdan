@@ -18,6 +18,7 @@ import { buildMonthGrid } from './domain/calendar'
 import { expandTasks } from './domain/occurrence'
 import type { AppData, Task, TaskDraft } from './domain/types'
 import { useAppStore } from './store/useAppStore'
+import { useTodayKey } from './hooks/useTodayKey'
 
 // 快捷键提示按平台显示：macOS 用 ⌘，Windows 用 Ctrl
 const isMac = window.api?.platform === 'darwin'
@@ -48,17 +49,33 @@ export function App() {
   const updateSettings = useAppStore((s) => s.updateSettings)
   const replaceData = useAppStore((s) => s.replaceData)
 
-  const today = useMemo(() => new Date(), [])
-  const todayKey = format(today, 'yyyy-MM-dd')
+  // 跨天自动更新：不能只在挂载时 new Date()，否则第二天「今天」还是昨天
+  const [todayKey, refreshTodayKey] = useTodayKey()
+  const initialToday = useRef(format(new Date(), 'yyyy-MM-dd'))
 
   const view = data.settings.view
-  const [cursor, setCursor] = useState(() => ({ year: today.getFullYear(), month: today.getMonth() }))
-  const [selectedKey, setSelectedKey] = useState(todayKey)
-  const [drawer, setDrawer] = useState<DrawerState>({ open: false, task: null, date: todayKey })
+  const [cursor, setCursor] = useState(() => {
+    const now = new Date()
+    return { year: now.getFullYear(), month: now.getMonth() }
+  })
+  const [selectedKey, setSelectedKey] = useState(initialToday.current)
+  const [drawer, setDrawer] = useState<DrawerState>({ open: false, task: null, date: initialToday.current })
   const [projectOpen, setProjectOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [peek, setPeek] = useState<{ key: string; anchor: { left: number; top: number } } | null>(null)
+
+  // 跨天（或休眠唤醒/改系统时间）后自动回到新的「今天」
+  const lastTodayKey = useRef(todayKey)
+  useEffect(() => {
+    const previous = lastTodayKey.current
+    if (previous === todayKey) return
+    lastTodayKey.current = todayKey
+    setPeek(null)
+    setSelectedKey(todayKey)
+    const today = parseISO(todayKey)
+    setCursor({ year: today.getFullYear(), month: today.getMonth() })
+  }, [todayKey])
 
   const syncConfigured = useRef(false)
   const applyingRemote = useRef(false)
@@ -244,8 +261,12 @@ export function App() {
   }
 
   const goToday = (): void => {
-    setCursor({ year: today.getFullYear(), month: today.getMonth() })
-    setSelectedKey(todayKey)
+    // 用点击当下的时间：即使 hook 的 tick 还没跑到，也能回到真正的今天
+    const now = new Date()
+    const key = format(now, 'yyyy-MM-dd')
+    setCursor({ year: now.getFullYear(), month: now.getMonth() })
+    setSelectedKey(key)
+    refreshTodayKey()
   }
 
   const openCreate = useCallback((dateKey: string) => {
