@@ -328,6 +328,7 @@ export function App() {
     if (!task) return
     const prevDate = task.date
     updateTask(taskId, { date: dateKey })
+    setDraggingId(null)
     setSelectedKey(dateKey)
     setFlash({
       text: `已安排到 ${dateKey}`,
@@ -341,6 +342,8 @@ export function App() {
     const prevDate = task.date
     const prevRemind = task.remindAt
     updateTask(taskId, { date: undefined, remindAt: undefined })
+    // 拖拽源可能已被卸载，dragend 不会触发，这里手动清掉拖拽态
+    setDraggingId(null)
     setFlash({
       text: '已移入收集箱',
       undo: () => updateTask(taskId, { date: prevDate, remindAt: prevRemind })

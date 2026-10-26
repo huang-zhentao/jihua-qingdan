@@ -50,6 +50,7 @@ export function InboxPanel({
     setOver(false)
     const id = e.dataTransfer.getData('text/task-id')
     if (id) onDropToInbox(id)
+    onDragEndTask()
   }
 
   return (
