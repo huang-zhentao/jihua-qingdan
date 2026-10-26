@@ -3329,29 +3329,40 @@ html.theme-dark .ddate-inbox {
   background: #1b1e23;
   border-color: #2e333a;
 }
-/* 折叠状态下的边缘箭头 */
-.inbox-handle {
+/* 折叠状态：浮在日历顶部左侧的小标签，不占布局空间 */
+.month-layout {
   position: relative;
+}
+
+.inbox-handle {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  z-index: 30;
   display: flex;
-  flex: 0 0 18px;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   align-items: center;
   justify-content: center;
+  width: 22px;
+  height: 46px;
   padding: 0;
-  color: #9aa0a8;
+  color: #8b9098;
   cursor: pointer;
-  background: transparent;
-  border: 0;
-  border-right: 1px solid #f2f3f5;
-  opacity: 0.45;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  background: rgb(255 255 255 / 88%);
+  border: 1px solid #eceff3;
+  border-left: 0;
+  border-radius: 0 9px 9px 0;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 8%);
+  opacity: 0.55;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .inbox-handle:hover {
   color: var(--brand);
-  background: #fbfcfd;
   opacity: 1;
+  transform: translateX(1px);
 }
 
 .inbox-handle-arrow {
@@ -3394,7 +3405,9 @@ html.theme-dark .ddate-inbox {
 }
 
 html.theme-dark .inbox-handle {
-  border-right-color: #24272d;
+  background: rgb(30 33 38 / 88%);
+  border-color: #2a2e35;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
 }
 
 html.theme-dark .inbox-handle:hover {
