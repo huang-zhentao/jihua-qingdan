@@ -1,6 +1,6 @@
 import type { Project, Settings } from './types'
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export const DEFAULT_PROJECTS: Project[] = [
   { id: 'default', name: '默认', color: '#9AA4B2', sort: 0 },
@@ -35,5 +35,6 @@ export const DEFAULT_SETTINGS: Settings = {
   launchAtLogin: false,
   theme: 'light',
   compactMode: false,
-  syncIntervalHours: 24
+  syncIntervalHours: 24,
+  inboxOpen: true
 }

@@ -16,8 +16,8 @@ export interface Task {
   id: string
   projectId: string
   title: string
-  /** yyyy-MM-dd */
-  date: string
+  /** yyyy-MM-dd；省略表示还在收集箱（未排期） */
+  date?: string
   /** HH:mm，省略表示全天 */
   time?: string
   endTime?: string
@@ -51,6 +51,8 @@ export interface Settings {
   compactMode: boolean
   /** 自动同步间隔（小时），0 表示关闭自动同步 */
   syncIntervalHours: number
+  /** 月视图里收集箱边栏是否展开 */
+  inboxOpen: boolean
 }
 
 export interface AppData {

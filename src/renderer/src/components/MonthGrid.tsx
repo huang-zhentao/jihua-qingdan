@@ -29,18 +29,29 @@ function TaskChip({
   task,
   color,
   onEdit,
-  onToggle
+  onToggle,
+  onDragStart,
+  onDragEnd
 }: {
   task: Task
   color: string
   onEdit: () => void
   onToggle: () => void
+  onDragStart: () => void
+  onDragEnd: () => void
 }) {
   return (
     <div
       className={cx('chip', task.done && 'is-done')}
       style={{ '--chip': color } as CSSProperties}
       title={task.title}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/task-id', task.id)
+        e.dataTransfer.effectAllowed = 'move'
+        onDragStart()
+      }}
+      onDragEnd={onDragEnd}
       onClick={(e) => {
         e.stopPropagation()
         onEdit()
@@ -75,7 +86,10 @@ function DayCell({
   onEditTask,
   onToggleTask,
   onNewTask,
-  onShowMore
+  onShowMore,
+  onDropTask,
+  onDragStartTask,
+  onDragEndTask
 }: {
   day: CalendarDay
   tasks: Task[]
@@ -89,11 +103,15 @@ function DayCell({
   onToggleTask: (id: string) => void
   onNewTask: (key: string) => void
   onShowMore: (key: string, anchor: { left: number; top: number }) => void
+  onDropTask: (taskId: string, key: string) => void
+  onDragStartTask: (id: string) => void
+  onDragEndTask: () => void
 }) {
   const label = getDayLabel(day.date)
   const holiday = getHolidayMark(day.date)
   const { visible: visibleCount, rest } = fitChips(rowHeight, compact, tasks.length)
   const visible = tasks.slice(0, visibleCount)
+  const [over, setOver] = useState(false)
 
   return (
     <div
@@ -102,13 +120,27 @@ function DayCell({
         !day.inMonth && 'is-out',
         today && 'is-today',
         selected && 'is-selected',
-        isWeekend(day.weekday) && 'is-weekend'
+        isWeekend(day.weekday) && 'is-weekend',
+        over && 'is-drop-target'
       )}
       role="gridcell"
       aria-selected={selected}
       onClick={() => onSelect(day.key)}
       onDoubleClick={() => onNewTask(day.key)}
       title="双击新建日程"
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes('text/task-id')) return
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'move'
+        setOver(true)
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault()
+        setOver(false)
+        const id = e.dataTransfer.getData('text/task-id')
+        if (id) onDropTask(id, day.key)
+      }}
     >
       <div className="cell-head">
         <span className="cell-date">{day.date.getDate()}</span>
@@ -138,6 +170,8 @@ function DayCell({
               color={task.color ?? projectColor(task.projectId)}
               onEdit={() => onEditTask(task)}
               onToggle={() => onToggleTask(task.id)}
+              onDragStart={() => onDragStartTask(task.id)}
+              onDragEnd={onDragEndTask}
             />
           ))}
         {day.inMonth && rest > 0 ? (
@@ -171,6 +205,9 @@ interface GridProps {
   onToggleTask: (id: string) => void
   onNewTask: (key: string) => void
   onShowMore: (key: string, anchor: { left: number; top: number }) => void
+  onDropTask: (taskId: string, key: string) => void
+  onDragStartTask: (id: string) => void
+  onDragEndTask: () => void
 }
 
 export function MonthGrid({
@@ -185,7 +222,10 @@ export function MonthGrid({
   onEditTask,
   onToggleTask,
   onNewTask,
-  onShowMore
+  onShowMore,
+  onDropTask,
+  onDragStartTask,
+  onDragEndTask
 }: GridProps) {
   const labels = weekdayLabels(weekStart)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -244,6 +284,9 @@ export function MonthGrid({
               onToggleTask={onToggleTask}
               onNewTask={onNewTask}
               onShowMore={onShowMore}
+              onDropTask={onDropTask}
+              onDragStartTask={onDragStartTask}
+              onDragEndTask={onDragEndTask}
             />
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { CalendarDays, ListTodo, Navigation, Settings, Sparkles } from 'lucide-react'
+import { CalendarDays, Inbox, ListTodo, Navigation, Settings, Sparkles } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cx } from '../utils'
 
@@ -11,12 +11,21 @@ interface RailItem {
 
 const ITEMS: RailItem[] = [
   { key: 'month', label: '日历', icon: CalendarDays, ready: true },
+  { key: 'inbox', label: '收集箱', icon: Inbox, ready: true },
   { key: 'tasks', label: '待办', icon: ListTodo, ready: true },
   { key: 'ai', label: 'AI 分析', icon: Sparkles, ready: true },
   { key: 'settings', label: '设置', icon: Settings, ready: true }
 ]
 
-export function IconRail({ active, onSelect }: { active: string; onSelect?: (key: string) => void }) {
+export function IconRail({
+  active,
+  onSelect,
+  inboxCount
+}: {
+  active: string
+  onSelect?: (key: string) => void
+  inboxCount?: number
+}) {
   return (
     <nav className="rail" aria-label="主导航">
       <div className="rail-avatar" aria-hidden="true">
@@ -36,6 +45,7 @@ export function IconRail({ active, onSelect }: { active: string; onSelect?: (key
             onClick={() => item.ready && onSelect?.(item.key)}
           >
             <Icon size={20} strokeWidth={1.7} />
+            {item.key === 'inbox' && inboxCount ? <span className="rail-badge">{inboxCount}</span> : null}
           </button>
         )
       })}

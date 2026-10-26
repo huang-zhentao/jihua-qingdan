@@ -79,8 +79,8 @@ export function TaskDrawer({
     onSave(
       {
         title: value,
-        date,
-        remindAt: remindAtFor(date, remindDays),
+        date: date || undefined,
+        remindAt: date ? remindAtFor(date, remindDays) : undefined,
         projectId,
         priority,
         color: color ?? undefined,
@@ -236,15 +236,36 @@ export function TaskDrawer({
               </div>
             </div>
 
-            <label className="drow">
+            <div className="drow">
               <span className="dlabel">
                 <Calendar size={13} strokeWidth={1.7} />
                 日期
               </span>
-              <input className="dcontrol" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </label>
+              <div className="dcontrol ddate-line">
+                <input
+                  className="ddate"
+                  type="date"
+                  value={date}
+                  onChange={(e) => {
+                    setDate(e.target.value)
+                    if (!e.target.value) setRemindDays(0)
+                  }}
+                />
+                <button
+                  type="button"
+                  className={cx('ddate-inbox', !date && 'is-on')}
+                  onClick={() => {
+                    setDate('')
+                    setRemindDays(0)
+                  }}
+                  title="不安排日期，放进收集箱"
+                >
+                  {date ? '移入收集箱' : '在收集箱'}
+                </button>
+              </div>
+            </div>
 
-            <label className="drow">
+            <label className={cx('drow', !date && 'is-muted')}>
               <span className="dlabel">
                 <Bell size={13} strokeWidth={1.7} />
                 提醒时间
@@ -252,9 +273,11 @@ export function TaskDrawer({
               <select
                 className="dcontrol"
                 value={remindDays}
+                disabled={!date}
                 onChange={(e) => setRemindDays(Number(e.target.value))}
               >
-                {REMIND_DAYS.map((d) => (
+                {!date ? <option value={0}>未安排日期，不提醒</option> : null}
+                {REMIND_DAYS.filter((d) => date || d === 0).map((d) => (
                   <option key={d} value={d}>
                     {remindLabel(d)}
                   </option>

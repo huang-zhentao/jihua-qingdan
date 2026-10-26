@@ -33,13 +33,19 @@ function normalize(raw: unknown): AppData {
       sort: typeof p.sort === 'number' ? p.sort : i
     })),
     tasks: tasks
-      .filter((t) => t && typeof t.title === 'string' && typeof t.date === 'string')
+      .filter(
+        (t) =>
+          t &&
+          typeof t.title === 'string' &&
+          (t.date === undefined || t.date === null || typeof t.date === 'string')
+      )
       .map((t) => ({
         ...t,
         id: String(t.id ?? uid()),
         projectId: String(t.projectId ?? 'default'),
         title: String(t.title),
-        date: String(t.date),
+        // 没有日期 = 还在收集箱
+        date: t.date ? String(t.date) : undefined,
         done: Boolean(t.done),
         createdAt: t.createdAt ?? new Date().toISOString(),
         updatedAt: t.updatedAt ?? new Date().toISOString()

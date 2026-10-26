@@ -167,7 +167,7 @@ export function AiView({ tasks, projects, onOpenSettings }: Props) {
   const toKey = format(today, 'yyyy-MM-dd')
 
   const inRange = useMemo(
-    () => tasks.filter((t) => !t.deletedAt && t.date >= fromKey && t.date <= toKey),
+    () => tasks.filter((t) => !t.deletedAt && t.date && t.date >= fromKey && t.date <= toKey),
     [tasks, fromKey, toKey]
   )
 
@@ -187,7 +187,7 @@ export function AiView({ tasks, projects, onOpenSettings }: Props) {
   const systemPrompt = useMemo(() => {
     const lines = inRange
       .slice()
-      .sort((a, b) => a.date.localeCompare(b.date))
+      .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
       .slice(-60)
       .map((task) => {
         const name = projects.find((p) => p.id === task.projectId)?.name ?? '未分类'

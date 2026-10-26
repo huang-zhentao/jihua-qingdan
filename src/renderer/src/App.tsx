@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { DayPeek } from './components/DayPeek'
 import { DayView } from './components/DayView'
 import { AiView } from './components/AiView'
+import { InboxPanel } from './components/InboxPanel'
 import { IconRail } from './components/IconRail'
 import { MonthGrid } from './components/MonthGrid'
 import { MonthToolbar } from './components/MonthToolbar'
@@ -136,8 +137,8 @@ export function App() {
   useEffect(() => {
     if (!ready) return
     const list = data.tasks
-      .filter((t) => t.remindAt && !t.done && !t.deletedAt)
-      .map((t) => ({ id: t.id, title: t.title, at: t.remindAt as string, date: t.date }))
+      .filter((t) => t.remindAt && t.date && !t.done && !t.deletedAt)
+      .map((t) => ({ id: t.id, title: t.title, at: t.remindAt as string, date: t.date as string }))
     window.api.notify.sync(list)
   }, [ready, data.tasks])
 
@@ -148,7 +149,7 @@ export function App() {
       setSelectedKey(date)
       const parsed = parseISO(date)
       setCursor({ year: parsed.getFullYear(), month: parsed.getMonth() })
-      if (task) setDrawer({ open: true, task, date: task.date })
+      if (task) setDrawer({ open: true, task, date: task.date ?? date })
     })
   }, [])
 
@@ -162,7 +163,7 @@ export function App() {
     if (!ready) return
     const list = data.tasks
       .filter((t) => !t.deletedAt && !t.done && t.date === todayKey)
-      .map((t) => ({ id: t.id, title: t.title, date: t.date }))
+      .map((t) => ({ id: t.id, title: t.title, date: t.date as string }))
     window.api.tray.update(list)
   }, [ready, data.tasks, todayKey])
 
@@ -240,9 +241,18 @@ export function App() {
 
   const daysWithTasks = useMemo(() => {
     const set = new Set<string>()
-    for (const task of visibleTasks) set.add(task.date)
+    for (const task of visibleTasks) if (task.date) set.add(task.date)
     return set
   }, [visibleTasks])
+
+  // 收集箱：没有日期、且跟随项目筛选
+  const inboxTasks = useMemo(
+    () =>
+      liveTasks
+        .filter((t) => !t.date && (!filter || t.projectId === filter))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [liveTasks, filter]
+  )
 
   const taskCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -271,16 +281,18 @@ export function App() {
 
   const openCreate = useCallback((dateKey: string) => {
     setPeek(null)
-    setSelectedKey(dateKey)
+    if (dateKey) setSelectedKey(dateKey)
     setDrawer({ open: true, task: null, date: dateKey })
   }, [])
 
   const openEdit = useCallback((task: Task) => {
     setPeek(null)
-    setSelectedKey(task.date)
-    const parsed = parseISO(task.date)
-    setCursor({ year: parsed.getFullYear(), month: parsed.getMonth() })
-    setDrawer({ open: true, task, date: task.date })
+    if (task.date) {
+      setSelectedKey(task.date)
+      const parsed = parseISO(task.date)
+      setCursor({ year: parsed.getFullYear(), month: parsed.getMonth() })
+    }
+    setDrawer({ open: true, task, date: task.date ?? '' })
   }, [])
 
   const handleSave = (draft: TaskDraft, done: boolean): void => {
@@ -290,9 +302,11 @@ export function App() {
       const created = createTask(draft)
       if (done) toggleTask(created.id)
     }
-    const parsed = parseISO(draft.date)
-    setCursor({ year: parsed.getFullYear(), month: parsed.getMonth() })
-    setSelectedKey(draft.date)
+    if (draft.date) {
+      const parsed = parseISO(draft.date)
+      setCursor({ year: parsed.getFullYear(), month: parsed.getMonth() })
+      setSelectedKey(draft.date)
+    }
     setDrawer((d) => ({ ...d, open: false }))
   }
 
@@ -300,6 +314,37 @@ export function App() {
     if (!drawer.task) return
     deleteTask(drawer.task.id)
     setDrawer((d) => ({ ...d, open: false }))
+  }
+
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [flash, setFlash] = useState<{ text: string; undo: () => void } | null>(null)
+
+  const addInboxTask = (title: string): void => {
+    createTask({ title, projectId: filter ?? 'default' })
+  }
+
+  const scheduleTask = (taskId: string, dateKey: string): void => {
+    const task = useAppStore.getState().data.tasks.find((t) => t.id === taskId)
+    if (!task) return
+    const prevDate = task.date
+    updateTask(taskId, { date: dateKey })
+    setSelectedKey(dateKey)
+    setFlash({
+      text: `已安排到 ${dateKey}`,
+      undo: () => updateTask(taskId, { date: prevDate })
+    })
+  }
+
+  const moveToInbox = (taskId: string): void => {
+    const task = useAppStore.getState().data.tasks.find((t) => t.id === taskId)
+    if (!task || !task.date) return
+    const prevDate = task.date
+    const prevRemind = task.remindAt
+    updateTask(taskId, { date: undefined, remindAt: undefined })
+    setFlash({
+      text: '已移入收集箱',
+      undo: () => updateTask(taskId, { date: prevDate, remindAt: prevRemind })
+    })
   }
 
   useEffect(() => {
@@ -338,7 +383,12 @@ export function App() {
       <div className="app-body">
         <IconRail
           active={view === 'month' ? 'month' : view === 'day' ? 'tasks' : 'ai'}
+          inboxCount={inboxTasks.length}
           onSelect={(key) => {
+            if (key === 'inbox') {
+              updateSettings({ view: 'month', inboxOpen: !data.settings.inboxOpen })
+              return
+            }
             if (key === 'month') updateSettings({ view: 'month' })
             if (key === 'tasks') updateSettings({ view: 'day' })
             if (key === 'ai') updateSettings({ view: 'ai' })
@@ -348,8 +398,25 @@ export function App() {
 
         <main className="workspace">
           {view === 'month' ? (
-            <>
-              <MonthToolbar
+            <div className="month-layout">
+              {data.settings.inboxOpen ? (
+                <InboxPanel
+                  tasks={inboxTasks}
+                  projects={projects}
+                  filterLabel={filter ? projects.find((p) => p.id === filter)?.name : undefined}
+                  draggingId={draggingId}
+                  onAdd={addInboxTask}
+                  onOpen={openEdit}
+                  onToggle={toggleTask}
+                  onScheduleToday={(id) => scheduleTask(id, todayKey)}
+                  onDragStartTask={setDraggingId}
+                  onDragEndTask={() => setDraggingId(null)}
+                  onDropToInbox={moveToInbox}
+                />
+              ) : null}
+
+              <div className="month-main">
+                <MonthToolbar
                 year={cursor.year}
                 month={cursor.month}
                 onPrev={() => shiftMonth(-1)}
@@ -402,6 +469,9 @@ export function App() {
                   setSelectedKey(key)
                   setPeek({ key, anchor })
                 }}
+                onDropTask={scheduleTask}
+                onDragStartTask={setDraggingId}
+                onDragEndTask={() => setDraggingId(null)}
               />
 
               <button
@@ -413,7 +483,8 @@ export function App() {
               >
                 <Plus size={22} strokeWidth={2.2} />
               </button>
-            </>
+              </div>
+            </div>
           ) : view === 'day' ? (
             <DayView
               dateKey={selectedKey}
@@ -502,6 +573,18 @@ export function App() {
           onEdit={openEdit}
           onToggle={toggleTask}
           onNew={() => openCreate(peek.key)}
+        />
+      ) : null}
+
+      {flash ? (
+        <Toast
+          message={flash.text}
+          actionLabel="撤销"
+          onAction={() => {
+            flash.undo()
+            setFlash(null)
+          }}
+          onClose={() => setFlash(null)}
         />
       ) : null}
 

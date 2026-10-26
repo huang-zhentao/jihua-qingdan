@@ -3019,3 +3019,313 @@ html.theme-dark .md code {
   min-width: 0;
   text-align: right;
 }
+/* ---------- 月视图 + 收集箱 ---------- */
+
+.month-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.month-main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.inbox {
+  display: flex;
+  flex: 0 0 240px;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px 10px 8px;
+  background: #fbfcfd;
+  border-right: 1px solid #eef0f3;
+}
+
+.inbox-head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 0 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333a43;
+}
+
+.inbox-count {
+  min-width: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 18px;
+  color: #8b9098;
+  text-align: center;
+  background: #eef1f5;
+  border-radius: 9px;
+}
+
+.inbox-filter {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: #a0a6ae;
+}
+
+.inbox-add {
+  padding: 0 2px 8px;
+}
+
+.inbox-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #23282f;
+  background: #fff;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  outline: none;
+}
+
+.inbox-input:focus {
+  border-color: #ffb27a;
+}
+
+.inbox-list {
+  flex: 1;
+  min-height: 0;
+  padding: 2px;
+  overflow: auto;
+  border-radius: 8px;
+}
+
+.inbox-list.is-over {
+  background: #fff6ec;
+  outline: 1px dashed #ffb27a;
+}
+
+.inbox-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  height: 34px;
+  padding: 0 6px;
+  margin-bottom: 4px;
+  background: #fff;
+  border: 1px solid #eff1f4;
+  border-radius: 8px;
+  cursor: grab;
+}
+
+.inbox-item:hover {
+  border-color: #ffd3b3;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 4%);
+}
+
+.inbox-item.is-dragging {
+  opacity: 0.45;
+}
+
+.inbox-check {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  color: transparent;
+  background: #fff;
+  border: 1.5px solid #d4d9df;
+  border-radius: 50%;
+}
+
+.inbox-check.is-done {
+  color: #fff;
+  background: #2fbf71;
+  border-color: #2fbf71;
+}
+
+.inbox-item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: #333a43;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-item-title.is-done {
+  color: #a8aeb8;
+  text-decoration: line-through;
+}
+
+.inbox-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.inbox-today {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #a0a6ae;
+  visibility: hidden;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+}
+
+.inbox-item:hover .inbox-today {
+  visibility: visible;
+}
+
+.inbox-today:hover {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.inbox-empty {
+  padding: 40px 12px;
+  font-size: 12px;
+  color: #a8aeb8;
+  text-align: center;
+}
+
+.inbox-empty-sub {
+  margin-top: 8px;
+  line-height: 1.7;
+  color: #b9bec5;
+}
+
+.inbox-foot {
+  padding: 8px 4px 2px;
+  font-size: 11px;
+  color: #b0b6bd;
+  text-align: center;
+}
+
+.cell.is-drop-target {
+  background: #fff6ec;
+  outline: 2px dashed #ffb27a;
+  outline-offset: -2px;
+}
+
+.rail-badge {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  min-width: 14px;
+  padding: 0 3px;
+  font-size: 9px;
+  line-height: 14px;
+  color: #fff;
+  text-align: center;
+  background: var(--brand);
+  border-radius: 7px;
+}
+
+.rail-item {
+  position: relative;
+}
+
+/* 抽屉里的日期行 */
+.ddate-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ddate {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #333a43;
+  background: #fff;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  outline: none;
+}
+
+.ddate-inbox {
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: #6e7681;
+  background: #fff;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+}
+
+.ddate-inbox.is-on {
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-color: #ffd3b3;
+}
+
+.drow.is-muted .dlabel {
+  color: #b0b6bd;
+}
+
+/* 暗色 */
+html.theme-dark .inbox {
+  background: #16181c;
+  border-right-color: #24272d;
+}
+
+html.theme-dark .inbox-head {
+  color: #e6e8eb;
+}
+
+html.theme-dark .inbox-count {
+  color: #9aa2ac;
+  background: #24282f;
+}
+
+html.theme-dark .inbox-input {
+  color: #e6e8eb;
+  background: #1b1e23;
+  border-color: #2e333a;
+}
+
+html.theme-dark .inbox-item {
+  background: #1e2126;
+  border-color: #2a2e35;
+}
+
+html.theme-dark .inbox-item:hover {
+  border-color: #4a3726;
+}
+
+html.theme-dark .inbox-item-title {
+  color: #dfe3e8;
+}
+
+html.theme-dark .inbox-list.is-over {
+  background: #2a2118;
+}
+
+html.theme-dark .cell.is-drop-target {
+  background: #2a2118;
+}
+
+html.theme-dark .ddate,
+html.theme-dark .ddate-inbox {
+  color: #e6e8eb;
+  background: #1b1e23;
+  border-color: #2e333a;
+}

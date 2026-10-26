@@ -28,7 +28,7 @@ export function SearchDialog({ open, tasks, projects, onClose, onPick }: Props) 
     if (!q) return []
     return tasks
       .filter((t) => !t.deletedAt && (t.title.toLowerCase().includes(q) || (t.notes ?? '').toLowerCase().includes(q)))
-      .sort((a, b) => b.date.localeCompare(a.date) || a.createdAt.localeCompare(b.createdAt))
+      .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '') || a.createdAt.localeCompare(b.createdAt))
       .slice(0, 40)
   }, [tasks, query])
 
@@ -93,7 +93,7 @@ export function SearchDialog({ open, tasks, projects, onClose, onPick }: Props) 
                 <span className="color-dot color-dot-sm" style={{ background: colorOf(task.projectId) }} />
                 <span className="search-title">{task.title}</span>
                 <span className="search-meta">
-                  {nameOf(task.projectId)} · {task.date}
+                  {nameOf(task.projectId)} · {task.date ?? '未安排'}
                 </span>
                 {index === active ? <CornerDownLeft size={13} className="search-enter" /> : null}
               </button>
