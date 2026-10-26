@@ -383,12 +383,7 @@ export function App() {
       <div className="app-body">
         <IconRail
           active={view === 'month' ? 'month' : view === 'day' ? 'tasks' : 'ai'}
-          inboxCount={inboxTasks.length}
           onSelect={(key) => {
-            if (key === 'inbox') {
-              updateSettings({ view: 'month', inboxOpen: !data.settings.inboxOpen })
-              return
-            }
             if (key === 'month') updateSettings({ view: 'month' })
             if (key === 'tasks') updateSettings({ view: 'day' })
             if (key === 'ai') updateSettings({ view: 'ai' })
@@ -412,8 +407,20 @@ export function App() {
                   onDragStartTask={setDraggingId}
                   onDragEndTask={() => setDraggingId(null)}
                   onDropToInbox={moveToInbox}
+                  onCollapse={() => updateSettings({ inboxOpen: false })}
                 />
-              ) : null}
+              ) : (
+                <button
+                  type="button"
+                  className="inbox-handle"
+                  aria-label="展开收集箱"
+                  title="展开收集箱"
+                  onClick={() => updateSettings({ inboxOpen: true })}
+                >
+                  <span className="inbox-handle-arrow">›</span>
+                  {inboxTasks.length ? <span className="inbox-handle-count">{inboxTasks.length}</span> : null}
+                </button>
+              )}
 
               <div className="month-main">
                 <MonthToolbar

@@ -3329,3 +3329,83 @@ html.theme-dark .ddate-inbox {
   background: #1b1e23;
   border-color: #2e333a;
 }
+/* 折叠状态下的边缘箭头 */
+.inbox-handle {
+  position: relative;
+  display: flex;
+  flex: 0 0 18px;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #9aa0a8;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid #f2f3f5;
+  opacity: 0.45;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.inbox-handle:hover {
+  color: var(--brand);
+  background: #fbfcfd;
+  opacity: 1;
+}
+
+.inbox-handle-arrow {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.inbox-handle-count {
+  min-width: 14px;
+  padding: 0 3px;
+  font-size: 9px;
+  line-height: 14px;
+  color: #fff;
+  text-align: center;
+  background: var(--brand);
+  border-radius: 7px;
+}
+
+.inbox-collapse {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  color: #9aa0a8;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+}
+
+.inbox-collapse:hover {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.inbox-filter {
+  margin-left: 4px;
+}
+
+html.theme-dark .inbox-handle {
+  border-right-color: #24272d;
+}
+
+html.theme-dark .inbox-handle:hover {
+  background: #1b1e23;
+}
+
+html.theme-dark .inbox-collapse {
+  color: #7f8791;
+}
+
+html.theme-dark .inbox-collapse:hover {
+  color: #ff9a45;
+  background: #2a2118;
+}

@@ -1,4 +1,4 @@
-import { Check, Inbox, Sun } from 'lucide-react'
+import { Check, ChevronLeft, Inbox, Sun } from 'lucide-react'
 import { useState, type CSSProperties, type DragEvent } from 'react'
 import type { Project, Task } from '../domain/types'
 import { cx } from '../utils'
@@ -15,6 +15,7 @@ interface Props {
   onDragStartTask: (id: string) => void
   onDragEndTask: () => void
   onDropToInbox: (taskId: string) => void
+  onCollapse: () => void
 }
 
 export function InboxPanel({
@@ -28,7 +29,8 @@ export function InboxPanel({
   onScheduleToday,
   onDragStartTask,
   onDragEndTask,
-  onDropToInbox
+  onDropToInbox,
+  onCollapse
 }: Props) {
   const [title, setTitle] = useState('')
   const [over, setOver] = useState(false)
@@ -57,6 +59,15 @@ export function InboxPanel({
         <span className="inbox-title-text">收集箱</span>
         <span className="inbox-count">{tasks.length}</span>
         {filterLabel ? <span className="inbox-filter">{filterLabel}</span> : null}
+        <button
+          type="button"
+          className="inbox-collapse"
+          aria-label="收起收集箱"
+          title="收起收集箱"
+          onClick={onCollapse}
+        >
+          <ChevronLeft size={14} strokeWidth={2} />
+        </button>
       </header>
 
       <div className="inbox-add">
