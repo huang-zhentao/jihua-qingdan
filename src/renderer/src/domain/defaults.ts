@@ -36,5 +36,6 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'light',
   compactMode: false,
   syncIntervalHours: 24,
-  inboxOpen: true
+  inboxOpen: true,
+  inboxWidth: 240
 }

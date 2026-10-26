@@ -403,6 +403,8 @@ export function App() {
                   projects={projects}
                   filterLabel={filter ? projects.find((p) => p.id === filter)?.name : undefined}
                   draggingId={draggingId}
+                  width={data.settings.inboxWidth ?? 240}
+                  onResize={(w) => updateSettings({ inboxWidth: w })}
                   onAdd={addInboxTask}
                   onOpen={openEdit}
                   onToggle={toggleTask}

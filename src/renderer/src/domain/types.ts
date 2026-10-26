@@ -53,6 +53,8 @@ export interface Settings {
   syncIntervalHours: number
   /** 月视图里收集箱边栏是否展开 */
   inboxOpen: boolean
+  /** 收集箱边栏宽度（px），可拖动分界调整 */
+  inboxWidth: number
 }
 
 export interface AppData {

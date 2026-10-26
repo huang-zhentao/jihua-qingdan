@@ -3422,3 +3422,67 @@ html.theme-dark .inbox-collapse:hover {
   color: #ff9a45;
   background: #2a2118;
 }
+/* 可拖动分界 */
+.inbox {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.inbox-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  z-index: 6;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+}
+
+.inbox-resizer::after {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 2px;
+  height: 28px;
+  content: "";
+  background: #e3e6eb;
+  border-radius: 2px;
+  transform: translateY(-50%);
+  transition: background 0.15s ease;
+}
+
+.inbox-resizer:hover::after {
+  background: var(--brand);
+}
+
+body.is-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* 标题放不下就换行，不截断 */
+.inbox-item {
+  align-items: flex-start;
+  height: auto;
+  min-height: 34px;
+  padding: 7px 8px;
+}
+
+.inbox-item .inbox-check {
+  margin-top: 2px;
+}
+
+.inbox-item-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.inbox-item .inbox-dot,
+.inbox-item .inbox-today {
+  margin-top: 4px;
+}
+
+html.theme-dark .inbox-resizer::after {
+  background: #33383f;
+}

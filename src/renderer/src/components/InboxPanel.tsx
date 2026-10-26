@@ -1,5 +1,5 @@
 import { Check, ChevronLeft, Inbox, Sun } from 'lucide-react'
-import { useState, type CSSProperties, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type DragEvent } from 'react'
 import type { Project, Task } from '../domain/types'
 import { cx } from '../utils'
 
@@ -8,6 +8,7 @@ interface Props {
   projects: Project[]
   filterLabel?: string
   draggingId: string | null
+  width: number
   onAdd: (title: string) => void
   onOpen: (task: Task) => void
   onToggle: (id: string) => void
@@ -16,13 +17,19 @@ interface Props {
   onDragEndTask: () => void
   onDropToInbox: (taskId: string) => void
   onCollapse: () => void
+  onResize: (width: number) => void
 }
+
+const MIN_WIDTH = 180
+const MAX_WIDTH = 360
+const DEFAULT_WIDTH = 240
 
 export function InboxPanel({
   tasks,
   projects,
   filterLabel,
   draggingId,
+  width,
   onAdd,
   onOpen,
   onToggle,
@@ -30,10 +37,42 @@ export function InboxPanel({
   onDragStartTask,
   onDragEndTask,
   onDropToInbox,
-  onCollapse
+  onCollapse,
+  onResize
 }: Props) {
   const [title, setTitle] = useState('')
   const [over, setOver] = useState(false)
+  const [localWidth, setLocalWidth] = useState<number | null>(null)
+  const startRef = useRef({ x: 0, width: width })
+  const currentRef = useRef(width)
+
+  // 拖动结束后设置里会写入新宽度，等它生效再清掉临时值，避免闪一下
+  useEffect(() => {
+    if (localWidth !== null && Math.abs(width - localWidth) < 1) setLocalWidth(null)
+  }, [width, localWidth])
+
+  const shownWidth = localWidth ?? width
+
+  const startResize = (e: React.MouseEvent): void => {
+    e.preventDefault()
+    startRef.current = { x: e.clientX, width: shownWidth }
+    currentRef.current = shownWidth
+    document.body.classList.add('is-resizing')
+
+    const onMove = (ev: MouseEvent): void => {
+      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startRef.current.width + ev.clientX - startRef.current.x))
+      currentRef.current = next
+      setLocalWidth(next)
+    }
+    const onUp = (): void => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      document.body.classList.remove('is-resizing')
+      onResize(Math.round(currentRef.current))
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   const colorOf = (task: Task): string =>
     task.color ?? projects.find((p) => p.id === task.projectId)?.color ?? '#9AA4B2'
@@ -54,7 +93,16 @@ export function InboxPanel({
   }
 
   return (
-    <aside className="inbox">
+    <aside className="inbox" style={{ width: shownWidth }}>
+      <div
+        className="inbox-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="拖动调整收集箱宽度"
+        title="拖动调整宽度，双击恢复默认"
+        onMouseDown={startResize}
+        onDoubleClick={() => onResize(DEFAULT_WIDTH)}
+      />
       <header className="inbox-head">
         <Inbox size={15} strokeWidth={1.9} />
         <span className="inbox-title-text">收集箱</span>
