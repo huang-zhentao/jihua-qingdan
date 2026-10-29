@@ -254,15 +254,20 @@ export function App() {
     [liveTasks, filter]
   )
 
-  // 每天完成的任务数（按 doneAt 的本地日期统计），用于收集箱底部热力图
+  // 每天完成的任务数：按任务所属日期统计（10/28 的任务，凌晨勾掉也算 10/28）；
+  // 收集箱里没有日期的任务，按完成时刻的本地日期算。
   const doneCounts = useMemo(() => {
     const map: Record<string, number> = {}
     for (const task of liveTasks) {
-      if (!task.done || !task.doneAt) continue
-      const at = new Date(task.doneAt)
-      const key = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(
-        at.getDate()
-      ).padStart(2, '0')}`
+      if (!task.done) continue
+      let key = task.date
+      if (!key && task.doneAt) {
+        const at = new Date(task.doneAt)
+        key = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(
+          at.getDate()
+        ).padStart(2, '0')}`
+      }
+      if (!key) continue
       map[key] = (map[key] ?? 0) + 1
     }
     return map
@@ -422,6 +427,7 @@ export function App() {
                   doneCounts={doneCounts}
                   todayKey={todayKey}
                   weekStart={data.settings.weekStart}
+                  showHeat={data.settings.showHeatmap !== false}
                   onJumpDate={(key) => {
                     setSelectedKey(key)
                     const parsed = parseISO(key)

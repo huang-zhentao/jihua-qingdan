@@ -14,6 +14,7 @@ interface Props {
   doneCounts: Record<string, number>
   todayKey: string
   weekStart: 0 | 1
+  showHeat: boolean
   onAdd: (title: string) => void
   onOpen: (task: Task) => void
   onToggle: (id: string) => void
@@ -53,6 +54,7 @@ export function InboxPanel({
   doneCounts,
   todayKey,
   weekStart,
+  showHeat,
   onAdd,
   onOpen,
   onToggle,
@@ -276,7 +278,7 @@ export function InboxPanel({
         <footer className="inbox-foot">拖动到右边日期即可安排</footer>
       </div>
 
-      <div className="inbox-heat">
+      {showHeat ? (<div className="inbox-heat">
         <div className="heat-head">
           <span className="heat-title">完成情况</span>
           <span className="heat-sub">近 {weekCount} 周</span>
@@ -370,7 +372,7 @@ export function InboxPanel({
             More
           </span>
         </div>
-      </div>
+      </div>) : null}
     </aside>
   )
 }

@@ -193,6 +193,19 @@ export function SettingsDialog({ open, data, onClose, onSynced, onReplace, onTog
           </div>
         </label>
 
+        <label className="toggle-row">
+          <span className="toggle-label">收集箱显示完成热力图</span>
+          <input
+            type="checkbox"
+            className="toggle-input"
+            checked={data.settings.showHeatmap}
+            onChange={(e) => onToggle({ showHeatmap: e.target.checked })}
+          />
+          <span className="toggle-track">
+            <span className="toggle-thumb" />
+          </span>
+        </label>
+
         <div className="toggle-row">
           <span className="toggle-label">数据与备份</span>
           <div className="row-actions">

@@ -55,6 +55,8 @@ export interface Settings {
   inboxOpen: boolean
   /** 收集箱边栏宽度（px），可拖动分界调整 */
   inboxWidth: number
+  /** 收集箱底部显示「完成情况」热力图 */
+  showHeatmap: boolean
 }
 
 export interface AppData {

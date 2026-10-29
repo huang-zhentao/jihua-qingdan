@@ -37,5 +37,6 @@ export const DEFAULT_SETTINGS: Settings = {
   compactMode: false,
   syncIntervalHours: 24,
   inboxOpen: true,
-  inboxWidth: 240
+  inboxWidth: 240,
+  showHeatmap: true
 }
