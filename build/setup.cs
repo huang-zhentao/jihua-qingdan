@@ -13,7 +13,7 @@ using Microsoft.Win32;
 class SetupForm : Form
 {
     const string AppName = "计划清单";
-    const string AppVer = "0.14.4";
+    const string AppVer = "0.14.5";
     const string AppExe = "计划清单.exe";
 
     readonly Panel content = new Panel();

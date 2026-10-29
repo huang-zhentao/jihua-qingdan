@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Notification, shell, Tray } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, Notification, screen, shell, Tray } from 'electron'
 import { spawn } from 'node:child_process'
 import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { writeFile } from 'node:fs/promises'
@@ -241,44 +241,105 @@ function createWindow(): void {
 }
 
 let trayTasks: Array<{ id: string; title: string; date: string }> = []
+let trayMenuWindow: BrowserWindow | null = null
 
-function buildTrayMenu(): Menu {
-  const items: Electron.MenuItemConstructorOptions[] = []
-
-  if (trayTasks.length === 0) {
-    items.push({ label: '今天没有未完成任务', enabled: false })
-  } else {
-    items.push({ label: `今天未完成（${trayTasks.length} 条）`, enabled: false })
-    for (const task of trayTasks.slice(0, 12)) {
-      items.push({
-        label: task.title.length > 26 ? `${task.title.slice(0, 26)}…` : task.title,
-        click: () => {
-          mainWindow?.webContents.send('tray:complete', task.id)
-          log('tray complete', task.id)
-        }
-      })
-    }
-    if (trayTasks.length > 12) items.push({ label: `还有 ${trayTasks.length - 12} 条…`, enabled: false })
+function trayDark(): boolean {
+  try {
+    const raw = readData()
+    const theme = raw ? (JSON.parse(raw) as { settings?: { theme?: string } }).settings?.theme : 'light'
+    if (theme === 'dark') return true
+    if (theme === 'light') return false
+    // 只有显式选了「跟随系统」才看系统
+    return nativeTheme.shouldUseDarkColors
+  } catch {
+    return false
   }
+}
 
-  items.push({ type: 'separator' })
-  items.push({ label: '显示计划清单', click: () => showWindow() })
-  items.push({ type: 'separator' })
-  items.push({
-    label: '退出计划清单',
-    click: () => {
-      isQuitting = true
-      app.quit()
+function estimateTrayHeight(count: number): number {
+  const rows = Math.min(Math.max(count, 1), 8)
+  return 10 + 32 + rows * 34 + 56
+}
+
+function positionTrayMenu(win: BrowserWindow, height: number): void {
+  const bounds = tray?.getBounds() ?? { x: 0, y: 0, width: 0, height: 0 }
+  const width = 300
+  const display = screen.getDisplayNearestPoint({
+    x: Math.round(bounds.x + bounds.width / 2),
+    y: Math.round(bounds.y + bounds.height / 2)
+  })
+  const area = display.workArea
+  let x = Math.round(bounds.x + bounds.width / 2 - width / 2)
+  let y = Math.round(bounds.y - height - 6)
+  if (y < area.y) y = Math.round(bounds.y + bounds.height + 6)
+  x = Math.max(area.x + 4, Math.min(x, area.x + area.width - width - 4))
+  win.setBounds({ x, y, width, height })
+}
+
+function ensureTrayMenuWindow(): BrowserWindow {
+  if (trayMenuWindow && !trayMenuWindow.isDestroyed()) return trayMenuWindow
+  const win = new BrowserWindow({
+    width: 300,
+    height: 260,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    hasShadow: true,
+    roundedCorners: true,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+      contextIsolation: true
     }
   })
+  win.setAlwaysOnTop(true, 'pop-up-menu')
+  win.on('blur', () => win.hide())
+  win.on('closed', () => {
+    trayMenuWindow = null
+  })
 
-  return Menu.buildFromTemplate(items)
+  if (!app.isPackaged && process.env['ELECTRON_RENDERER_URL']) {
+    void win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/tray.html`)
+  } else {
+    void win.loadFile(join(__dirname, '../renderer/tray.html'))
+  }
+
+  trayMenuWindow = win
+  return win
+}
+
+function openTrayMenu(): void {
+  const win = ensureTrayMenuWindow()
+  const data = { tasks: trayTasks, dark: trayDark() }
+  const send = (): void => {
+    if (!win.isDestroyed()) win.webContents.send('tray:data', data)
+  }
+  if (win.webContents.isLoading()) win.webContents.once('did-finish-load', send)
+  else send()
+
+  positionTrayMenu(win, estimateTrayHeight(trayTasks.length))
+  win.showInactive()
+  win.focus()
+}
+
+function closeTrayMenu(): void {
+  if (trayMenuWindow && !trayMenuWindow.isDestroyed()) trayMenuWindow.hide()
 }
 
 function refreshTrayMenu(): void {
   if (!tray) return
-  tray.setContextMenu(buildTrayMenu())
   tray.setToolTip(trayTasks.length ? `计划清单 · 今天还有 ${trayTasks.length} 条` : '计划清单')
+  if (trayMenuWindow && !trayMenuWindow.isDestroyed() && trayMenuWindow.isVisible()) {
+    trayMenuWindow.webContents.send('tray:data', { tasks: trayTasks, dark: trayDark() })
+  }
 }
 
 function showWindow(): void {
@@ -311,10 +372,14 @@ function createTray(): void {
       tray = new Tray(image.isEmpty() ? nativeImage.createEmpty() : image.resize({ width: 16, height: 16 }))
     }
     tray.setToolTip('计划清单')
-    tray.setContextMenu(buildTrayMenu())
+    tray.on('right-click', () => {
+      if (trayMenuWindow && !trayMenuWindow.isDestroyed() && trayMenuWindow.isVisible()) closeTrayMenu()
+      else openTrayMenu()
+    })
     if (!isMac) {
-      // Windows：左键点击托盘图标切换窗口显示；macOS 上左键会直接弹出菜单（系统行为）
+      // Windows：左键点击托盘图标切换窗口显示
       tray.on('click', () => {
+        closeTrayMenu()
         if (!mainWindow) return
         if (mainWindow.isVisible() && mainWindow.isFocused()) mainWindow.hide()
         else showWindow()
@@ -439,10 +504,41 @@ ipcMain.on('tray:update', (_e, tasks: Array<{ id: string; title: string; date: s
   log('tray tasks', trayTasks.length)
 })
 
+ipcMain.on('tray:toggle', (_e, taskId: string) => {
+  mainWindow?.webContents.send('tray:complete', taskId)
+  log('tray toggle', taskId)
+  setTimeout(refreshTrayMenu, 600)
+})
+
+ipcMain.on('tray:open', (_e, taskId: string) => {
+  const task = trayTasks.find((t) => t.id === taskId)
+  closeTrayMenu()
+  showWindow()
+  if (task) mainWindow?.webContents.send('app:open-task', task.id, task.date)
+})
+
+ipcMain.on('tray:show-app', () => {
+  closeTrayMenu()
+  showWindow()
+})
+
+ipcMain.on('tray:quit', () => {
+  isQuitting = true
+  app.quit()
+})
+
+ipcMain.on('tray:close', () => closeTrayMenu())
+
+ipcMain.on('tray:resize', (_e, height: number) => {
+  if (!trayMenuWindow || trayMenuWindow.isDestroyed() || !trayMenuWindow.isVisible()) return
+  if (!Number.isFinite(height)) return
+  positionTrayMenu(trayMenuWindow, Math.max(120, Math.min(560, Math.round(height))))
+})
+
 // 仅自动化测试使用：模拟点击托盘菜单里的第一条任务
 if (process.env.TRAY_TEST === '1') {
-  ipcMain.on('tray:debug-complete', () => {
-    const first = trayTasks[0]
+  ipcMain.on('tray:debug-open', () => openTrayMenu())
+  ipcMain.on('tray:debug-complete', () => {    const first = trayTasks[0]
     if (first) mainWindow?.webContents.send('tray:complete', first.id)
   })
 }

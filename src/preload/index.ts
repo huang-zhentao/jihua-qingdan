@@ -31,7 +31,22 @@ const api = {
       ipcRenderer.on('tray:complete', handler)
       return () => ipcRenderer.removeListener('tray:complete', handler)
     },
-    debugComplete: process.env.TRAY_TEST === '1' ? (): void => ipcRenderer.send('tray:debug-complete') : undefined
+    debugComplete: process.env.TRAY_TEST === '1' ? (): void => ipcRenderer.send('tray:debug-complete') : undefined,
+    debugOpenMenu: process.env.TRAY_TEST === '1' ? (): void => ipcRenderer.send('tray:debug-open') : undefined
+  },
+  trayMenu: {
+    onData: (cb: (data: { tasks: Array<{ id: string; title: string; date: string }>; dark: boolean }) => void): (() => void) => {
+      const handler = (_e: unknown, data: { tasks: Array<{ id: string; title: string; date: string }>; dark: boolean }): void =>
+        cb(data)
+      ipcRenderer.on('tray:data', handler)
+      return () => ipcRenderer.removeListener('tray:data', handler)
+    },
+    toggle: (taskId: string): void => ipcRenderer.send('tray:toggle', taskId),
+    open: (taskId: string): void => ipcRenderer.send('tray:open', taskId),
+    showApp: (): void => ipcRenderer.send('tray:show-app'),
+    quit: (): void => ipcRenderer.send('tray:quit'),
+    close: (): void => ipcRenderer.send('tray:close'),
+    resize: (height: number): void => ipcRenderer.send('tray:resize', height)
   },
   sync: {
     status: (): Promise<{ configured: boolean; status: { state: string; at?: string; message?: string; count?: number } }> =>
