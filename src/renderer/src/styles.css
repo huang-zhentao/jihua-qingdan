@@ -3548,11 +3548,15 @@ html.theme-dark .inbox-resizer::after {
   display: flex;
   flex: 0 0 10px;
   flex-direction: column;
-  gap: 3px;
-  font-size: 8px;
-  line-height: 10px;
+  gap: 4px;
+  font-size: 9px;
+  line-height: 14px;
   color: #b6bcc4;
   text-align: right;
+}
+
+.heat-weekdays span {
+  height: 14px;
 }
 
 .heat-weekdays .is-blank {
@@ -3562,12 +3566,10 @@ html.theme-dark .inbox-resizer::after {
 .heat-cells {
   display: grid;
   grid-auto-flow: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .heat-cell {
-  width: 10px;
-  height: 10px;
   background: #ebedf0;
   border-radius: 2px;
   cursor: pointer;
@@ -3607,6 +3609,13 @@ html.theme-dark .inbox-resizer::after {
   border-radius: 5px;
   transform: translate(-50%, -100%);
   box-shadow: 0 4px 12px rgb(0 0 0 / 22%);
+}
+
+.heat-tip.is-below::after {
+  top: -4px;
+  bottom: auto;
+  border-top: 0;
+  border-bottom: 4px solid #24292f;
 }
 
 .heat-tip::after {

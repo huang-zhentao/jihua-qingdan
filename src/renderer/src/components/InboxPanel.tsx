@@ -30,8 +30,8 @@ const MIN_WIDTH = 180
 const MAX_WIDTH = 360
 const DEFAULT_WIDTH = 240
 
-const CELL = 10
-const GAP = 3
+const CELL = 14
+const GAP = 4
 const LABEL_W = 16
 
 const WEEKDAY_CN = ['日', '一', '二', '三', '四', '五', '六']
@@ -68,7 +68,7 @@ export function InboxPanel({
   const [over, setOver] = useState(false)
   const [localWidth, setLocalWidth] = useState<number | null>(null)
   const [panelHeight, setPanelHeight] = useState(780)
-  const [tip, setTip] = useState<{ text: string; left: number; top: number } | null>(null)
+  const [tip, setTip] = useState<{ text: string; left: number; top: number; below?: boolean } | null>(null)
   const startRef = useRef({ x: 0, width: width })
   const currentRef = useRef(width)
   const asideRef = useRef<HTMLElement>(null)
@@ -92,7 +92,7 @@ export function InboxPanel({
 
   const weekCount = Math.max(
     8,
-    Math.min(26, Math.floor((shownWidth - LABEL_W - 10 + GAP) / (CELL + GAP)))
+    Math.min(16, Math.floor((shownWidth - LABEL_W - 10 + GAP) / (CELL + GAP)))
   )
   const showGrid = panelHeight >= 480
 
@@ -326,10 +326,13 @@ export function InboxPanel({
                           const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
                           const host = (e.currentTarget.closest('.heat-body') as HTMLElement)?.getBoundingClientRect()
                           if (!host) return
+                          const top = rect.top - host.top
+                          const below = top < 24
                           setTip({
                             text: `${d.key.slice(5).replace('-', '月')}日 · ${d.count ? `完成 ${d.count} 条` : '没有完成'}`,
                             left: rect.left - host.left + CELL / 2,
-                            top: rect.top - host.top - 6
+                            top: below ? top + CELL + 6 : top - 6,
+                            below
                           })
                         }}
                         onClick={() => {
@@ -346,7 +349,7 @@ export function InboxPanel({
             </div>
 
             {tip ? (
-              <div className="heat-tip" style={{ left: tip.left, top: tip.top }}>
+              <div className={cx('heat-tip', tip.below && 'is-below')} style={{ left: tip.left, top: tip.top }}>
                 {tip.text}
               </div>
             ) : null}
