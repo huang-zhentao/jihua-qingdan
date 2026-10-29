@@ -254,6 +254,20 @@ export function App() {
     [liveTasks, filter]
   )
 
+  // 每天完成的任务数（按 doneAt 的本地日期统计），用于收集箱底部热力图
+  const doneCounts = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const task of liveTasks) {
+      if (!task.done || !task.doneAt) continue
+      const at = new Date(task.doneAt)
+      const key = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(
+        at.getDate()
+      ).padStart(2, '0')}`
+      map[key] = (map[key] ?? 0) + 1
+    }
+    return map
+  }, [liveTasks])
+
   const taskCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     for (const task of liveTasks) counts[task.projectId] = (counts[task.projectId] ?? 0) + 1
@@ -405,6 +419,14 @@ export function App() {
                   draggingId={draggingId}
                   width={data.settings.inboxWidth ?? 240}
                   onResize={(w) => updateSettings({ inboxWidth: w })}
+                  doneCounts={doneCounts}
+                  todayKey={todayKey}
+                  weekStart={data.settings.weekStart}
+                  onJumpDate={(key) => {
+                    setSelectedKey(key)
+                    const parsed = parseISO(key)
+                    setCursor({ year: parsed.getFullYear(), month: parsed.getMonth() })
+                  }}
                   onAdd={addInboxTask}
                   onOpen={openEdit}
                   onToggle={toggleTask}

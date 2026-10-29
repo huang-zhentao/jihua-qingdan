@@ -3486,3 +3486,212 @@ body.is-resizing {
 html.theme-dark .inbox-resizer::after {
   background: #33383f;
 }
+/* ---------- 收集箱：上下 2:1 与完成热力图 ---------- */
+
+.inbox-top {
+  display: flex;
+  flex: 2;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.inbox-heat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 10px;
+  border-top: 1px solid #eef0f3;
+}
+
+.heat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 2px 8px;
+}
+
+.heat-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b525c;
+}
+
+.heat-sub {
+  font-size: 10px;
+  color: #a8aeb8;
+}
+
+.heat-body {
+  position: relative;
+}
+
+.heat-months {
+  position: relative;
+  height: 13px;
+  font-size: 9px;
+  color: #a0a6ae;
+}
+
+.heat-months span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+}
+
+.heat-grid {
+  display: flex;
+  gap: 6px;
+}
+
+.heat-weekdays {
+  display: flex;
+  flex: 0 0 10px;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 8px;
+  line-height: 10px;
+  color: #b6bcc4;
+  text-align: right;
+}
+
+.heat-weekdays .is-blank {
+  visibility: hidden;
+}
+
+.heat-cells {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 3px;
+}
+
+.heat-cell {
+  width: 10px;
+  height: 10px;
+  background: #ebedf0;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.heat-cell.lv0 { background: #ebedf0; }
+.heat-cell.lv1 { background: #9be9a8; }
+.heat-cell.lv2 { background: #40c463; }
+.heat-cell.lv3 { background: #30a14e; }
+.heat-cell.lv4 { background: #216e39; }
+
+.heat-cell.is-today {
+  outline: 1px solid #ffb27a;
+  outline-offset: 1px;
+}
+
+.heat-cell.is-future {
+  background: transparent;
+  cursor: default;
+}
+
+.heat-cell:hover {
+  outline: 1px solid #b9bec5;
+  outline-offset: 1px;
+}
+
+.heat-tip {
+  position: absolute;
+  z-index: 6;
+  padding: 4px 7px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+  background: #24292f;
+  border-radius: 5px;
+  transform: translate(-50%, -100%);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 22%);
+}
+
+.heat-tip::after {
+  position: absolute;
+  bottom: -4px;
+  left: calc(50% - 4px);
+  width: 0;
+  height: 0;
+  content: '';
+  border-top: 4px solid #24292f;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+}
+
+.heat-foot {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 2px 0;
+  margin-top: auto;
+  font-size: 10px;
+  color: #a0a6ae;
+}
+
+.heat-week b {
+  font-weight: 600;
+  color: #30a14e;
+}
+
+.heat-legend {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  font-size: 9px;
+  color: #a0a6ae;
+}
+
+.heat-swatch {
+  width: 9px;
+  height: 9px;
+  background: #ebedf0;
+  border-radius: 2px;
+}
+
+.heat-swatch.lv1 { background: #9be9a8; }
+.heat-swatch.lv2 { background: #40c463; }
+.heat-swatch.lv3 { background: #30a14e; }
+.heat-swatch.lv4 { background: #216e39; }
+
+/* 深色：GitHub 暗色绿 */
+html.theme-dark .inbox-heat {
+  border-top-color: #262a30;
+}
+
+html.theme-dark .heat-title {
+  color: #c8ced6;
+}
+
+html.theme-dark .heat-cell,
+html.theme-dark .heat-swatch {
+  background: #2a2e35;
+}
+
+html.theme-dark .heat-cell.lv1,
+html.theme-dark .heat-swatch.lv1 { background: #0e4429; }
+html.theme-dark .heat-cell.lv2,
+html.theme-dark .heat-swatch.lv2 { background: #006d32; }
+html.theme-dark .heat-cell.lv3,
+html.theme-dark .heat-swatch.lv3 { background: #26a641; }
+html.theme-dark .heat-cell.lv4,
+html.theme-dark .heat-swatch.lv4 { background: #39d353; }
+
+html.theme-dark .heat-cell.is-future {
+  background: transparent;
+}
+
+html.theme-dark .heat-tip {
+  background: #3a4048;
+}
+
+html.theme-dark .heat-tip::after {
+  border-top-color: #3a4048;
+}
+
+html.theme-dark .heat-week b {
+  color: #39d353;
+}
